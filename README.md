@@ -1,2 +1,2 @@
 # Code-gen-for-robot-arm.-OJT-FALL-2025-FPT
-Code generation for Robot application
+This is the internship project we done when work at Vietdynamics.
