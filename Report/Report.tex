@@ -60,8 +60,12 @@ Recent advancements in large language models (LLMs) have demonstrated their pote
 \includegraphics[width= 9cm]{flow.png}
 
 We leverage the capabilities of large language models (LLMs) to generate code for robot arm applications. Combined with visual information from dedicated sensors like Mech-EYE we could enhance the understanding of the environment and improve the accuracy of the generated code. 
-The overall pipeline consists of several key components: Camera, 
+The overall pipeline consists of several key components: Mech-EYE 3D industrial camera, LLMs, and a simulator for validating the generated code without the need of physical hardware. The Mech-EYE camera captures high-resolution images and 3D point clouds of the robot's surroundings, providing essential visual context for the LLMs. The LLMs, such as Claude-sonet or specialized models like RoboCodeX\cite{mu2024robocodex}, are then employed to generate code based on the visual data and specific task requirements. More comprehensive tasks such as video instructions for robotic manipulation are also considered \cite{xie2025robotic}. 
+Finally, the generated code is executed in a controlled environment built with \href{https://docs.ros.org/}{ROS2} and \href{http://gazebosim.org/}{GAZEBO} to validate its functionality and performance.
+
 \subsection{Data Collection}
+
+
 
 \section{Results and Discussion}
 \section{Conclusion}
