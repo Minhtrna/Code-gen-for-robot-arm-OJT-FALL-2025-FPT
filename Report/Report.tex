@@ -58,7 +58,7 @@ Other relevant works include the development of vision-language models (VLMs) li
 
 \section{Methodology}
 \subsection{Overview}
-\includegraphics[width= 9cm]{flow.png}
+\includegraphics[width=7cm]{OJT_fig_1.png}
 
 We leverage the capabilities of vision language models (VLMs) to generate code for robot arm applications. Combined with visual information from dedicated sensors like Mech-EYE we could enhance the understanding of the environment and improve the accuracy of the generated code. 
 The overall pipeline consists of several key components: Mech-EYE 3D industrial camera, VLMs, and a simulator for validating the generated code without the need of physical hardware. The Mech-EYE camera captures high-resolution images and 3D point clouds of the robot's surroundings, providing essential visual context for the VLMs. The VLMs, such as MobileVLM or specialized models like RoboCodeX\cite{mu2024robocodex}, are then employed to generate code based on the visual data and specific task requirements. More comprehensive tasks such as video instructions for robotic manipulation are also considered \cite{xie2025robotic}.
