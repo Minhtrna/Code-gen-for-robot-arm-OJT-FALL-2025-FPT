@@ -1,0 +1,320 @@
+%% NOTICE: Overleaf free plan is limiting this compilation, so it is better to compile using your own computer
+\documentclass{beamer}
+
+%% TODO: Uncomment the next three lines to add notes to presentation slides
+%\usepackage{pgfpages}
+%\setbeameroption{show notes on second screen}
+%\setbeamertemplate{note page}{\insertnote}
+
+\usepackage[utf8]{inputenc}
+
+\usepackage{graphicx}
+
+%% TODO: Put all the figure files inside the images folder
+\graphicspath{{images/}}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+\usepackage{pifont}
+
+%% TODO: Use \cmark for tick and \xmark for x
+\newcommand{\cmark}{\ding{51}}%
+\newcommand{\xmark}{\ding{55}}%
+
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+%% TODO: Comment the next three lines to remove the bibliography
+\usepackage[backend=biber,style=numeric, citestyle=ieee]{biblatex}
+\addbibresource{References.bib}  % Fixed: Changed from bibliography.bib to References.bib
+\AtBeginBibliography{\small}
+
+\usepackage{appendixnumberbeamer}
+\pdfstringdefDisableCommands{%
+\def\translate#1{#1}%
+}
+
+%% TODO: Comment the next line if you need the control symbol
+\beamertemplatenavigationsymbolsempty
+
+\usetheme{Berlin}
+\useinnertheme{circles}
+
+\AtBeginSection[]
+{
+ \begin{frame}
+ \frametitle{Table of Contents}
+ \tableofcontents[currentsection]
+ \end{frame}
+}
+
+%% TODO: Add information to the title page
+\title{Code Generation with Vision Language Models for Robot arms application}
+\author{Tran Quang Minh, Luu Trong Hieu, Nguyen Cong Khanh, Nguyen Quang Trung}
+\institute[FPT University - VietDynamic JSC]{
+ \textit{Department of Artificial Intelligence} \\
+ FPT University - VietDynamic JSC}  % Fixed: Added missing closing brace
+\date{Weekly Meeting}  % Fixed: Removed the broken syntax
+% \logo{\includegraphics[width=.05\linewidth]{IU}}  % Commented out since IU image doesn't exist
+
+%% Page number
+\expandafter\def\expandafter\insertshorttitle\expandafter{%
+ \insertshorttitle\hfill%
+ \insertframenumber\,/\,\inserttotalframenumber}
+
+\begin{document}
+
+%% Title frame
+\begin{frame}
+    \titlepage
+    % Removed the broken \item commands that were outside itemize environment
+    \note{}
+\end{frame}
+
+%% ToC frame
+\begin{frame}{Table of Contents}
+    \tableofcontents
+    % Removed the broken \item commands that were outside itemize environment
+    \note{}
+\end{frame}
+
+\section{Introduction} 
+
+%% TODO: Make sure to use \alert{} for highlighting keywords, and \cite{} to cite the corresponding quotations
+\begin{frame}{Motivation}
+    \begin{itemize} 	
+        \item This is the first \alert{highlighted keyword} to emphasize an important concept.
+        % \item The second point addresses \alert{another key idea} in \cite{knuth:1984}.  % Commented out citation
+    \end{itemize}
+    %% TODO: You can add the note here
+    \note{}
+\end{frame}
+
+%% TODO: If you need a button, label the frames accordingly then using \hyperlink{label_of_the_dest_frame}{\beamerbutton{Name of the dest. frame}
+\begin{frame}[label=objectives]{Objectives \hyperlink{scope}{\beamerbutton{Scope}}}
+    \begin{block}{Sample Block Title}
+        This block presents a \alert{key concept} that is crucial for understanding the topic.
+    \end{block}
+    \begin{alertblock}{Sample Alert Block Title}
+        This block presents a more alarming \alert{key concept} that is crucial for understanding the topic.
+    \end{alertblock}
+    %% TODO: You can add the note here
+    \note{}
+\end{frame}
+
+\begin{frame}{Actors \& Features}
+    \textbf{Actors:}
+                                    
+    \textbf{Features:}
+    %% TODO: You can add the note here
+    \note{}
+\end{frame}
+
+\begin{frame}{Contributions}				
+    \begin{block}{Scientific Contribution}
+        % Add content here
+    \end{block}						
+    \begin{block}{Real-world Contribution}
+        % Add content here
+    \end{block}					
+    %% TODO: You can add the note here
+    \note{}
+\end{frame}
+
+\section{Related Work}
+
+\begin{frame}{Research gaps}
+    \begin{alertblock}{Research gap}
+        % Add content here
+    \end{alertblock}
+                                                                
+    $\Rightarrow$ \textbf{Concluding statement.}
+                                                                
+    %% TODO: You can add the note here
+    \note{}
+\end{frame}
+         
+\section{Proposed Method} 
+
+%% TODO: Adjust the size of the figure by using [scale=x] or [widht=.x\linewidth] (x is a fraction) to fit within the frame. Then rename to your picture file name and add the caption
+\begin{frame}{Overview}
+    \begin{figure}
+        \centering
+        % \includegraphics[width=.8\linewidth]{samplel.png}  % Commented out since image doesn't exist
+        \fbox{Figure placeholder - replace with your image}
+        \caption{The caption of the figure.}
+    \end{figure}	
+    %% TODO: You can add the note here
+    \note{}
+\end{frame}
+
+\begin{frame}[label=process1]{\texttt{Sample} Process \hyperlink{algo1}{\beamerbutton{Algorithm}} \hyperlink{pseudocode1}{\beamerbutton{Pseudocode}}}
+    \begin{columns}
+        \column{0.3\textwidth}
+        \centering
+        % \includegraphics[height=1.8\textwidth]{samplev.png}  % Commented out since image doesn't exist
+        \fbox{Image placeholder}
+        \column{0.7\textwidth}
+        \begin{itemize}
+            \item \textbf{Goal:} Add your goal here
+            \item \textbf{Result:} Add your result here
+            \item \textbf{Step:} Add your step here
+            \item \textbf{Scope:} Add your scope here
+        \end{itemize}
+    \end{columns}
+    %% TODO: You can add the note here
+    \note{}
+\end{frame}
+                                
+\section{Result} 
+            
+\begin{frame}{Prototyping}
+    %% TODO: Add your GitHub repository link here
+    \textbf{GitHub repository:} \url{https://github.com/Minhtrna/Code-gen-for-robot-arm-OJT-FALL-2025-FPT}
+                                                                
+    %% TODO: Add your demo website link here
+    \textbf{Demo Website:} \url{https://example.com}
+                            
+    \begin{columns}
+        \column{0.5\textwidth}
+        \begin{figure}
+            \centering
+            % \includegraphics[width=.8\textwidth]{samples1.png}  % Commented out since image doesn't exist
+            \fbox{Figure 1 placeholder}
+            \caption{The caption of the figure.}
+        \end{figure}	
+        \column{0.5\textwidth}
+        \begin{figure}
+            \centering
+            % \includegraphics[width=.8\textwidth]{samples2.png}  % Commented out since image doesn't exist
+            \fbox{Figure 2 placeholder}
+            \caption{The caption of the figure.}
+        \end{figure}
+    \end{columns}
+    %% TODO: You can add the note here
+    \note{}
+\end{frame}
+            
+\section{Discussion} 
+    
+\begin{frame}{Limitations}
+    \begin{itemize}
+        \item Add your limitations here
+    \end{itemize}
+    $\Rightarrow$ \textbf{Concluding statement.}
+    %% TODO: You can add the note here
+    \note{}
+\end{frame}
+
+\begin{frame}{Comparison}
+    \begin{table}[ht]
+        \centering
+        \caption{Comparison of different methods (\protect\cmark: YES, \protect\xmark: NO).}
+        %% Comment the next line if the table width is relatively small
+        \resizebox{\textwidth}{!}{%
+            \begin{tabular}{lcccccc}
+                \hline
+                          & \textbf{Your Method} & Method B & Method C & Method D & Method E & Method F \\ \hline
+                Feature 1 & \cmark               & \cmark   & \xmark   & \cmark   & \xmark   & \cmark   \\ 
+                Feature 2 & \cmark               & \xmark   & \cmark   & \cmark   & \cmark   & \xmark   \\ 
+                Feature 3 & \xmark               & \cmark   & \cmark   & \xmark   & \xmark   & \cmark   \\ 
+                Feature 4 & \cmark               & \cmark   & \xmark   & \xmark   & \cmark   & \xmark   \\ 
+                Feature 5 & \xmark               & \xmark   & \cmark   & \cmark   & \xmark   & \cmark   \\ 
+                Feature 6 & \cmark               & \xmark   & \cmark   & \xmark   & \xmark   & \xmark   \\ \hline
+            \end{tabular}%
+        }
+    \end{table}
+    %% TODO: You can add the note here
+    \note{}
+\end{frame}
+                                 	
+\section{Conclusion}
+
+\begin{frame}{Demonstration}
+    \begin{block}{Process A}
+        Add content here
+    \end{block}
+    \begin{block}{Scenario 1}
+        Add content here
+    \end{block}
+    \begin{alertblock}{Scenario 2}
+        Add content here
+    \end{alertblock}
+    \begin{block}{Process B}
+        Add content here
+    \end{block}
+    %% TODO: You can add the note here
+    \note{}
+\end{frame}
+                                             			
+%% Thank You frame
+\begin{frame}
+    \centering
+    % \includegraphics[width=.7\linewidth]{thankyou}  % Commented out since image doesn't exist
+    \Huge Thank You!
+    %% TODO: You can add the note here
+    \note{}
+\end{frame}
+                    
+%% Appendix frames
+\appendix
+                    
+\begin{frame}[label=scope]{Scope \hyperlink{objectives}{\beamerbutton{Back to Objectives}}}
+    Add scope content here
+    %% TODO: You can add the note here
+    \note{}
+\end{frame}
+
+\begin{frame}[label=algo1]{Formalizing - \texttt{Sample} Algorithm \hyperlink{process1}{\beamerbutton{Back to $\texttt{Sample}$ process}}}
+    \begin{algorithm}[H]
+        \small
+        \caption{$(\text{Result}) \gets \texttt{Sample}(\text{Input1})$}
+        \label{alg:algo1}
+        \begin{algorithmic}[1]
+            \Require $\text{Input1}$ is a predefined parameter.
+            \State $\text{Set} \gets \emptyset$
+            \For{$\text{element} \in \text{Input1}$}
+            \If{$\text{Condition}(\text{element})$ is true}
+            \State $\text{Set} \gets \text{Set} \cup \{\text{Process}(\text{element})\}$
+            \Else
+            \State \textbf{continue}
+            \EndIf
+            \EndFor
+            \State $\text{Intermediate} \gets \texttt{Transform}(\text{Set})$
+            \State \Return $\text{Result}$
+        \end{algorithmic}
+    \end{algorithm}
+    %% TODO: You can add the note here
+    \note{}
+\end{frame}
+    
+\begin{frame}[label=pseudocode1]{Formalizing - \texttt{Sample} Pseudocode \hyperlink{process1}{\beamerbutton{Back to $\texttt{Sample}$ process}}}
+    \begin{algorithm}[H]
+        \small
+        \caption{$(\text{Result}) \gets \texttt{Sample}(\text{Input1})$}
+        \label{alg:pseudocode1}
+        \begin{algorithmic}[1]
+            \Require $\text{Input1}$ is a predefined parameter.
+            \State $\text{Set} \gets \emptyset$
+            \For{$\text{element} \in \text{Input1}$}
+            \If{$\text{Condition}(\text{element})$ is true}
+            \State $\text{Set} \gets \text{Set} \cup \{\text{Process}(\text{element})\}$
+            \Else
+            \State \textbf{continue}
+            \EndIf
+            \EndFor
+            \State $\text{Intermediate} \gets \texttt{Transform}(\text{Set})$
+            \State \Return $\text{Result}$
+        \end{algorithmic}
+    \end{algorithm}
+    %% TODO: You can add the note here
+    \note{}
+\end{frame}
+
+\begin{frame}[allowframebreaks, noframenumbering]{References}
+    % \printbibliography[heading=none]  % Commented out since References.bib might be empty
+    No references yet. Add them to References.bib file.
+\end{frame}
+                    
+\end{document}
