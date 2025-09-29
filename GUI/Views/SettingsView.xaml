@@ -1,0 +1,54 @@
+<UserControl x:Class="GUI.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="20">
+            <TextBlock Text="Application Settings" FontSize="24" FontWeight="Bold" Margin="0,0,0,20"/>
+            
+            <!-- General Settings -->
+            <GroupBox Header="General" Margin="0,0,0,15">
+                <StackPanel Margin="10">
+                    <CheckBox Content="Auto-connect to devices on startup" Margin="0,5"/>
+                    <CheckBox Content="Show notifications" Margin="0,5"/>
+                    <CheckBox Content="Save workspace on exit" Margin="0,5"/>
+                </StackPanel>
+            </GroupBox>
+            
+            <!-- Camera Settings -->
+            <GroupBox Header="Camera Settings" Margin="0,0,0,15">
+                <StackPanel Margin="10">
+                    <StackPanel Orientation="Horizontal" Margin="0,5">
+                        <TextBlock Text="Resolution:" Width="100" VerticalAlignment="Center"/>
+                        <ComboBox Width="150">
+                            <ComboBoxItem Content="1920x1080"/>
+                            <ComboBoxItem Content="1280x720"/>
+                            <ComboBoxItem Content="640x480"/>
+                        </ComboBox>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,5">
+                        <TextBlock Text="FPS:" Width="100" VerticalAlignment="Center"/>
+                        <Slider Width="150" Minimum="1" Maximum="60" Value="30"/>
+                    </StackPanel>
+                </StackPanel>
+            </GroupBox>
+            
+            <!-- AI Model Settings -->
+            <GroupBox Header="AI Model Settings">
+                <StackPanel Margin="10">
+                    <StackPanel Orientation="Horizontal" Margin="0,5">
+                        <TextBlock Text="Model Type:" Width="100" VerticalAlignment="Center"/>
+                        <ComboBox Width="200">
+                            <ComboBoxItem Content="YOLOv8"/>
+                            <ComboBoxItem Content="Custom Model"/>
+                        </ComboBox>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,5">
+                        <TextBlock Text="Confidence:" Width="100" VerticalAlignment="Center"/>
+                        <Slider Width="150" Minimum="0" Maximum="1" Value="0.7"/>
+                    </StackPanel>
+                </StackPanel>
+            </GroupBox>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
