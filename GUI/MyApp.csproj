@@ -4,6 +4,11 @@
 		<OutputType>WinExe</OutputType>
 		<TargetFramework>net9.0-windows</TargetFramework>
 		<UseWPF>true</UseWPF>
+		<ApplicationIcon>Resources\appicon.ico</ApplicationIcon>
 	</PropertyGroup>
+
+	<ItemGroup>
+		<Resource Include="Resources\**\*" />
+	</ItemGroup>
 
 </Project>
