@@ -1,4 +1,4 @@
-Ignore common LaTeX and OS generated files
+# Ignore common LaTeX and OS generated files
 # LaTeX auxiliary files
 *.aux
 *.bbl
@@ -26,6 +26,7 @@ Ignore common LaTeX and OS generated files
 *.loa
 *.auxlock
 *.bcf-SAVE-ERROR
+
 # LaTeX build directories
 build/
 output/
@@ -42,6 +43,7 @@ Thumbs.db
 # IDE files
 .vscode/
 .idea/
+.vs/
 *.swp
 *.swo
 *~
