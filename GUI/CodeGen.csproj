@@ -5,10 +5,48 @@
 		<TargetFramework>net9.0-windows</TargetFramework>
 		<UseWPF>true</UseWPF>
 		<ApplicationIcon>Resources\appicon.ico</ApplicationIcon>
+		<PlatformTarget>x64</PlatformTarget>
+		<Prefer32Bit>false</Prefer32Bit>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<Resource Include="Resources\**\*" />
 	</ItemGroup>
+
+	<!-- Enhanced DLL copy with debugging -->
+	<Target Name="CopyNativeDlls" BeforeTargets="Build">
+		<PropertyGroup>
+			<CppBuildDir>$(MSBuildProjectDirectory)\..\Core\CAM\Hardware\out\build\x64-Debug\bin\Debug</CppBuildDir>
+		</PropertyGroup>
+		
+		<Message Text="Looking for DLLs in: $(CppBuildDir)" Importance="high" />
+		
+		<ItemGroup>
+			<AllNativeDlls Include="$(CppBuildDir)\*.dll" />
+		</ItemGroup>
+		
+		<Message Text="Found @(AllNativeDlls->Count()) DLL(s) to copy" Importance="high" />
+		<Message Text="Source DLLs: %(AllNativeDlls.Filename)%(AllNativeDlls.Extension)" Importance="normal" />
+		
+		<!-- Force copy DeviceInterface.dll if it exists -->
+		<Copy 
+			SourceFiles="@(AllNativeDlls)" 
+			DestinationFolder="$(OutputPath)" 
+			ContinueOnError="true"
+			SkipUnchangedFiles="true"
+			OverwriteReadOnlyFiles="true" 
+			Condition="@(AllNativeDlls->Count()) &gt; 0"/>
+			
+		<Message Text="DLL copy completed to: $(OutputPath)" Importance="high" />
+	</Target>
+
+	<!-- Enhanced verification -->
+	<Target Name="VerifyDlls" AfterTargets="Build">
+		<ItemGroup>
+			<DllFiles Include="$(OutputPath)*.dll" />
+		</ItemGroup>
+		<Message Text="DLLs in output folder: %(DllFiles.Filename)%(DllFiles.Extension)" Importance="high" />
+		<Message Text="Total DLLs available: @(DllFiles->Count())" Importance="high" />
+	</Target>
 
 </Project>
