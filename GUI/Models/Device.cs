@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Windows.Media;
 
 namespace GUI.Models
 {
@@ -7,6 +8,8 @@ namespace GUI.Models
     {
         private string _name;
         private string _type;
+        private string _serialNumber;
+        private string _ipAddress;
         private string _status;
         private string _connectionStatus;
         private bool _isConnected;
@@ -21,6 +24,18 @@ namespace GUI.Models
         {
             get => _type;
             set { _type = value; OnPropertyChanged(); }
+        }
+
+        public string SerialNumber
+        {
+            get => _serialNumber;
+            set { _serialNumber = value; OnPropertyChanged(); }
+        }
+
+        public string IpAddress
+        {
+            get => _ipAddress;
+            set { _ipAddress = value; OnPropertyChanged(); }
         }
 
         public string Status
@@ -38,10 +53,23 @@ namespace GUI.Models
         public bool IsConnected
         {
             get => _isConnected;
-            set { _isConnected = value; OnPropertyChanged(); OnPropertyChanged(nameof(StatusColor)); }
+            set 
+            { 
+                _isConnected = value; 
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(StatusColor));
+            }
         }
 
-        public string StatusColor => IsConnected ? "Green" : (_status == "Available" ? "Orange" : "Red");
+        public SolidColorBrush StatusColor
+        {
+            get
+            {
+                return IsConnected ? new SolidColorBrush(Colors.Green) : 
+                       Status == "Available" ? new SolidColorBrush(Colors.Orange) : 
+                       new SolidColorBrush(Colors.Red);
+            }
+        }
 
         public event PropertyChangedEventHandler PropertyChanged;
         protected void OnPropertyChanged([CallerMemberName] string name = null)

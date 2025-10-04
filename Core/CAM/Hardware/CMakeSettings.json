@@ -1,0 +1,48 @@
+﻿{
+    "configurations": [
+        {
+            "name": "x64-Debug",
+            "generator": "Visual Studio 17 2022 Win64",
+            "configurationType": "Debug",
+            "inheritEnvironments": [ "msvc_x64_x64" ],
+            "buildRoot": "${projectDir}\\out\\build\\${name}",
+            "installRoot": "${projectDir}\\out\\install\\${name}",
+            "cmakeCommandArgs": "",
+            "buildCommandArgs": "",
+            "ctestCommandArgs": "",
+            "variables": [
+                {
+                    "name": "CMAKE_GENERATOR_PLATFORM",
+                    "value": "x64",
+                    "type": "STRING"
+                },
+                {
+                    "name": "CMAKE_TOOLCHAIN_FILE",
+                    "value": "C:\\Users\\quang\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake",
+                    "type": "FILEPATH"
+                },
+                {
+                    "name": "OpenCV_DIR",
+                    "value": "C:\\Users\\quang\\vcpkg\\installed\\x64-windows\\share\\opencv4",
+                    "type": "PATH"
+                },
+                {
+                    "name": "quirc_DIR",
+                    "value": "C:\\Users\\quang\\vcpkg\\installed\\x64-windows\\share\\quirc",
+                    "type": "PATH"
+                },
+                {
+                    "name": "VCPKG_TARGET_TRIPLET",
+                    "value": "x64-windows",
+                    "type": "STRING"
+                },
+                {
+                    "name": "MECHEYE_LIB_DEBUG",
+                    "value": "C:/Mech-Mind/Mech-Eye SDK-2.5.1/API/lib_debug/MechEyeApid.lib",
+                    "type": "FILEPATH"
+                }
+            ],
+            "intelliSenseMode": "windows-msvc-x64"
+        }
+    ]
+}
