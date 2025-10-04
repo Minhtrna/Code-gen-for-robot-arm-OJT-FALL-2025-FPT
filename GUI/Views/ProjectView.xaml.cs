@@ -8,6 +8,7 @@ namespace GUI.Views
     public partial class ProjectView : UserControl
     {
         private ProjectViewModel _viewModel;
+        private bool _isDisposed = false;
 
         public ProjectView()
         {
@@ -15,8 +16,9 @@ namespace GUI.Views
             _viewModel = new ProjectViewModel();
             DataContext = _viewModel;
             
-            // Subscribe to the Unloaded event instead of overriding OnUnloaded
-            this.Unloaded += ProjectView_Unloaded;
+            // DON'T subscribe to Unloaded - it fires when switching tabs!
+            // Instead, handle cleanup when the entire window closes
+            System.Diagnostics.Debug.WriteLine("[ProjectView] Created and ViewModel initialized");
         }
 
         private void ChatInputBox_KeyDown(object sender, KeyEventArgs e)
@@ -32,13 +34,15 @@ namespace GUI.Views
             }
         }
 
-        private void ProjectView_Unloaded(object sender, RoutedEventArgs e)
+        // Only dispose when the control is truly being destroyed, not just hidden
+        ~ProjectView()
         {
-            // Clean up resources when view is unloaded
-            _viewModel?.Dispose();
-            
-            // Unsubscribe from event to prevent memory leaks
-            this.Unloaded -= ProjectView_Unloaded;
+            if (!_isDisposed)
+            {
+                System.Diagnostics.Debug.WriteLine("[ProjectView] Finalizer called - disposing ViewModel");
+                _viewModel?.Dispose();
+                _isDisposed = true;
+            }
         }
     }
 }

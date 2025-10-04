@@ -18,26 +18,6 @@ struct DeviceInfo
     bool isConnected;
 };
 
-// NEW: Add these structs for live streaming
-struct ImageData
-{
-    int width;
-    int height;
-    int channels;
-    int stride;
-    unsigned char* data;
-    size_t dataSize;
-};
-
-struct StreamConfig
-{
-    int targetFPS;
-    int maxWidth;
-    int maxHeight;
-    bool enableProcessing;
-    int compressionQuality;
-};
-
 // Ensure C linkage for all exported functions
 extern "C" {
     // Mech-Eye camera functions
@@ -47,16 +27,7 @@ extern "C" {
     DEVICEINTERFACE_API bool __cdecl DisconnectMechEyeCamera();
     DEVICEINTERFACE_API bool __cdecl CaptureMechEyeImage(const char* filename);
     DEVICEINTERFACE_API bool __cdecl IsMechEyeConnected();
-    
-    // NEW: Live streaming functions
-    DEVICEINTERFACE_API bool __cdecl InitializeStream(const StreamConfig* config);
-    DEVICEINTERFACE_API void __cdecl ShutdownStream();
-    DEVICEINTERFACE_API bool __cdecl IsStreamActive();
-    DEVICEINTERFACE_API bool __cdecl CaptureFrameFromSource(void* cameraHandle, const char* sourceType, ImageData* outImageData);
-    DEVICEINTERFACE_API void* __cdecl AllocateImageBuffer(int width, int height, int channels);
-    DEVICEINTERFACE_API void __cdecl FreeImageBuffer(void* buffer);
-    DEVICEINTERFACE_API void __cdecl GetStreamStats(int* framesProcessed, float* averageFPS, int* droppedFrames);
-    
+   
     // OpenCV webcam functions  
     DEVICEINTERFACE_API int __cdecl DiscoverWebcams();
     DEVICEINTERFACE_API bool __cdecl GetWebcamDeviceInfo(int index, DeviceInfo* deviceInfo);

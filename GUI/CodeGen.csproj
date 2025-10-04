@@ -18,25 +18,25 @@
 		<PropertyGroup>
 			<CppBuildDir>$(MSBuildProjectDirectory)\..\Core\CAM\Hardware\out\build\x64-Debug\bin\Debug</CppBuildDir>
 		</PropertyGroup>
-		
+
 		<Message Text="Looking for DLLs in: $(CppBuildDir)" Importance="high" />
-		
+
 		<ItemGroup>
 			<AllNativeDlls Include="$(CppBuildDir)\*.dll" />
 		</ItemGroup>
-		
+
 		<Message Text="Found @(AllNativeDlls->Count()) DLL(s) to copy" Importance="high" />
 		<Message Text="Source DLLs: %(AllNativeDlls.Filename)%(AllNativeDlls.Extension)" Importance="normal" />
-		
+
 		<!-- Force copy DeviceInterface.dll if it exists -->
-		<Copy 
-			SourceFiles="@(AllNativeDlls)" 
-			DestinationFolder="$(OutputPath)" 
+		<Copy
+			SourceFiles="@(AllNativeDlls)"
+			DestinationFolder="$(OutputPath)"
 			ContinueOnError="true"
 			SkipUnchangedFiles="true"
-			OverwriteReadOnlyFiles="true" 
+			OverwriteReadOnlyFiles="true"
 			Condition="@(AllNativeDlls->Count()) &gt; 0"/>
-			
+
 		<Message Text="DLL copy completed to: $(OutputPath)" Importance="high" />
 	</Target>
 

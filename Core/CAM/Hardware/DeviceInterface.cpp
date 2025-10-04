@@ -1,11 +1,11 @@
 #include "DeviceInterface.h"
 #include "VirtualCamera.h"
-#include "LiveStreamProcessor.h"
 #include <opencv2/opencv.hpp>
 #include "area_scan_3d_camera/Camera.h"
 #include "area_scan_3d_camera/api_util.h"
 #include <iostream>
 #include <vector>
+#include <chrono>
 
 // Global variables for device management - LAZY INITIALIZATION
 static std::vector<mmind::eye::CameraInfo>* mechEyeDevices = nullptr;
@@ -18,7 +18,6 @@ static bool mechEyeConnected = false;
 static bool virtualCameraConnected = false;
 static bool webcamConnected = false;
 static int connectedWebcamIndex = -1;
-static LiveStream::LiveStreamProcessor* g_liveStreamProcessor = nullptr;
 
 // Lazy initialization functions
 static std::vector<mmind::eye::CameraInfo>& GetMechEyeDevices() {
@@ -70,23 +69,23 @@ extern "C" {
         try
         {
             std::cout << "Discovering Mech-Eye cameras..." << std::endl;
-            
+
             // Discover real cameras
             GetMechEyeDevices() = mmind::eye::Camera::discoverCameras(2000);
-            
+
             // Add virtual cameras
             GetVirtualCameraDevices() = VirtualDevice::VirtualCamera::createVirtualCameraInfos();
-            
+
             // Combine real and virtual cameras
             auto& realCameras = GetMechEyeDevices();
             auto& virtualCameras = GetVirtualCameraDevices();
-            
+
             realCameras.insert(realCameras.end(), virtualCameras.begin(), virtualCameras.end());
-            
-            std::cout << "Found " << GetMechEyeDevices().size() << " Mech-Eye devices (" 
-                      << (GetMechEyeDevices().size() - virtualCameras.size()) << " real, " 
-                      << virtualCameras.size() << " virtual)" << std::endl;
-            
+
+            std::cout << "Found " << GetMechEyeDevices().size() << " Mech-Eye devices ("
+                << (GetMechEyeDevices().size() - virtualCameras.size()) << " real, "
+                << virtualCameras.size() << " virtual)" << std::endl;
+
             return static_cast<int>(GetMechEyeDevices().size());
         }
         catch (const std::exception& e)
@@ -110,7 +109,7 @@ extern "C" {
         // Check if this is a virtual device
         bool isVirtual = info.serialNumber.find("VRT") == 0;
         std::string deviceType = isVirtual ? "Virtual Mech-Eye Camera" : "Mech-Eye Camera";
-        
+
         strncpy(deviceInfo->type, deviceType.c_str(), sizeof(deviceInfo->type) - 1);
         deviceInfo->type[sizeof(deviceInfo->type) - 1] = '\0';
 
@@ -138,7 +137,7 @@ extern "C" {
         {
             if (mechEyeConnected)
                 DisconnectMechEyeCamera();
-            
+
             if (virtualCameraConnected) {
                 GetCurrentVirtualCamera().disconnect();
                 virtualCameraConnected = false;
@@ -146,25 +145,28 @@ extern "C" {
 
             const auto& deviceInfo = devices[index];
             bool isVirtual = deviceInfo.serialNumber.find("VRT") == 0;
-            
+
             if (isVirtual) {
                 // Connect to virtual camera
                 if (GetCurrentVirtualCamera().connect(deviceInfo)) {
                     virtualCameraConnected = true;
                     std::cout << "Successfully connected to virtual camera: " << deviceInfo.deviceName << std::endl;
                     return true;
-                } else {
+                }
+                else {
                     std::cerr << "Failed to connect to virtual camera" << std::endl;
                     return false;
                 }
-            } else {
+            }
+            else {
                 // Connect to real camera
                 mmind::eye::ErrorStatus status = GetCurrentMechEyeCamera().connect(deviceInfo);
                 if (status.isOK()) {
                     mechEyeConnected = true;
                     std::cout << "Successfully connected to Mech-Eye camera: " << deviceInfo.deviceName << std::endl;
                     return true;
-                } else {
+                }
+                else {
                     std::cerr << "Failed to connect to Mech-Eye camera" << std::endl;
                     return false;
                 }
@@ -180,7 +182,7 @@ extern "C" {
     DEVICEINTERFACE_API bool __cdecl DisconnectMechEyeCamera()
     {
         bool success = true;
-        
+
         if (mechEyeConnected)
         {
             try
@@ -195,7 +197,7 @@ extern "C" {
                 success = false;
             }
         }
-        
+
         if (virtualCameraConnected)
         {
             try
@@ -210,7 +212,7 @@ extern "C" {
                 success = false;
             }
         }
-        
+
         return success;
     }
 
@@ -222,11 +224,11 @@ extern "C" {
         try
         {
             cv::Mat image2D;
-            
+
             if (virtualCameraConnected) {
                 // Use virtual camera to generate sample image
                 image2D = cv::Mat(480, 640, CV_8UC3);
-                
+
                 // Generate a sample pattern
                 for (int y = 0; y < image2D.rows; ++y) {
                     for (int x = 0; x < image2D.cols; ++x) {
@@ -237,13 +239,14 @@ extern "C" {
                         );
                     }
                 }
-                
+
                 // Add timestamp text
                 std::string timestamp = "Virtual Camera - " + std::to_string(std::chrono::duration_cast<std::chrono::seconds>(
                     std::chrono::system_clock::now().time_since_epoch()).count());
                 cv::putText(image2D, timestamp, cv::Point(10, 30), cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(255, 255, 255), 2);
-                
-            } else {
+
+            }
+            else {
                 // Use real camera
                 mmind::eye::Frame2D frame2D;
                 mmind::eye::ErrorStatus status = GetCurrentMechEyeCamera().capture2D(frame2D);
@@ -432,115 +435,10 @@ extern "C" {
         return webcamConnected;
     }
 
-    // NEW: Live streaming wrapper functions
-    DEVICEINTERFACE_API bool __cdecl InitializeStream(const StreamConfig* config)
-    {
-        if (!g_liveStreamProcessor) {
-            g_liveStreamProcessor = new LiveStream::LiveStreamProcessor();
-        }
-
-        if (config) {
-            LiveStream::StreamConfig cppConfig;
-            cppConfig.targetFPS = config->targetFPS;
-            cppConfig.maxWidth = config->maxWidth;
-            cppConfig.maxHeight = config->maxHeight;
-            cppConfig.enableProcessing = config->enableProcessing;
-            cppConfig.compressionQuality = config->compressionQuality;
-            
-            return g_liveStreamProcessor->initializeStream(cppConfig);
-        }
-        
-        LiveStream::StreamConfig defaultConfig;
-        return g_liveStreamProcessor->initializeStream(defaultConfig);
-    }
-
-    DEVICEINTERFACE_API void __cdecl ShutdownStream()
-    {
-        if (g_liveStreamProcessor) {
-            g_liveStreamProcessor->shutdownStream();
-        }
-    }
-
-    DEVICEINTERFACE_API bool __cdecl IsStreamActive()
-    {
-        return g_liveStreamProcessor ? g_liveStreamProcessor->isStreamActive() : false;
-    }
-
-    DEVICEINTERFACE_API bool __cdecl CaptureFrameFromSource(
-        void* cameraHandle,
-        const char* sourceType,
-        ImageData* outImageData)
-    {
-        if (!g_liveStreamProcessor || !sourceType || !outImageData) {
-            return false;
-        }
-
-        // FIXED: Check actual device connection status instead of defaulting to virtual
-        std::string type;
-        
-        // Determine actual source type based on connection status
-        if (webcamConnected) {
-            type = "webcam";
-        } else if (mechEyeConnected || virtualCameraConnected) {
-            type = "mecheye";  // This will handle both real and virtual cameras
-        } else {
-            // NO DEVICE CONNECTED - Don't show any image
-            return false;  // Changed from defaulting to "virtual"
-        }
-
-        LiveStream::ImageData cppImageData;
-        
-        bool success = g_liveStreamProcessor->captureFrameFromSource(cameraHandle, type, cppImageData);
-        
-        if (success) {
-            outImageData->width = cppImageData.width;
-            outImageData->height = cppImageData.height;
-            outImageData->channels = cppImageData.channels;
-            outImageData->stride = cppImageData.stride;
-            outImageData->dataSize = cppImageData.dataSize;
-            outImageData->data = cppImageData.data;
-            
-            // Transfer ownership to prevent double-free
-            cppImageData.data = nullptr;
-        }
-        
-        return success;
-    }
-
-    DEVICEINTERFACE_API void* __cdecl AllocateImageBuffer(int width, int height, int channels)
-    {
-        if (g_liveStreamProcessor) {
-            LiveStream::LiveStreamProcessor processor;
-            return processor.allocateImageBuffer(width, height, channels);
-        }
-        return nullptr;
-    }
-
-    DEVICEINTERFACE_API void __cdecl FreeImageBuffer(void* buffer)
-    {
-        if (g_liveStreamProcessor && buffer) {
-            LiveStream::LiveStreamProcessor processor;
-            processor.freeImageBuffer(static_cast<unsigned char*>(buffer));
-        }
-    }
-
-    DEVICEINTERFACE_API void __cdecl GetStreamStats(int* framesProcessed, float* averageFPS, int* droppedFrames)
-    {
-        if (g_liveStreamProcessor && framesProcessed && averageFPS && droppedFrames) {
-            g_liveStreamProcessor->getStreamStats(*framesProcessed, *averageFPS, *droppedFrames);
-        }
-    }
-
     DEVICEINTERFACE_API void __cdecl CleanupDevices()
     {
         DisconnectMechEyeCamera();
         DisconnectWebcam();
-
-        // Clean up live stream processor
-        if (g_liveStreamProcessor) {
-            delete g_liveStreamProcessor;
-            g_liveStreamProcessor = nullptr;
-        }
 
         if (mechEyeDevices) {
             mechEyeDevices->clear();
@@ -572,54 +470,3 @@ extern "C" {
     }
 
 } // extern "C"
-/*
-// Main function for standalone executable
-int main()
-{
-    std::cout << "=== DeviceInterface Standalone Test ===" << std::endl;
-    
-    // Test webcam discovery
-    std::cout << "\n--- Testing Webcam Functions ---" << std::endl;
-    int webcamCount = DiscoverWebcams();
-    std::cout << "Webcams found: " << webcamCount << std::endl;
-    
-    if (webcamCount > 0)
-    {
-        DeviceInfo deviceInfo;
-        if (GetWebcamDeviceInfo(0, &deviceInfo))
-        {
-            std::cout << "First webcam info:" << std::endl;
-            std::cout << "  Name: " << deviceInfo.name << std::endl;
-            std::cout << "  Type: " << deviceInfo.type << std::endl;
-            std::cout << "  Serial: " << deviceInfo.serialNumber << std::endl;
-        }
-    }
-    
-    // Test Mech-Eye discovery
-    std::cout << "\n--- Testing Mech-Eye Functions ---" << std::endl;
-    int mechEyeCount = DiscoverMechEyeCameras();
-    std::cout << "Mech-Eye cameras found: " << mechEyeCount << std::endl;
-    
-    if (mechEyeCount > 0)
-    {
-        DeviceInfo deviceInfo;
-        if (GetMechEyeDeviceInfo(0, &deviceInfo))
-        {
-            std::cout << "First Mech-Eye camera info:" << std::endl;
-            std::cout << "  Name: " << deviceInfo.name << std::endl;
-            std::cout << "  Type: " << deviceInfo.type << std::endl;
-            std::cout << "  Serial: " << deviceInfo.serialNumber << std::endl;
-            std::cout << "  IP: " << deviceInfo.ipAddress << std::endl;
-        }
-    }
-    
-    // Cleanup
-    CleanupDevices();
-    
-    std::cout << "\n=== Test Complete ===" << std::endl;
-    std::cout << "Press Enter to exit..." << std::endl;
-    std::cin.get();
-    
-    return 0;
-}
-*/

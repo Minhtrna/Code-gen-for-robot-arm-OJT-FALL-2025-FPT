@@ -19,31 +19,25 @@ namespace GUI.ViewModels
 {
     public class ProjectViewModel : INotifyPropertyChanged, IDisposable
     {
-        private readonly DeviceService deviceService; // Single service for everything
-        private DispatcherTimer _deviceRefreshTimer;
-        private DispatcherTimer _liveStreamTimer;
-
+        private readonly DeviceService deviceService;
+        
         private string _projectStatus = "Project: Robot Arm Analysis - Status: Ready";
-        private bool _hasLiveView = false;
-        private BitmapSource _liveViewSource;
         private string _chatInput = "";
         private string _generatedCode = "// Generated code will appear here\n// Select an analysis result and click 'Generate Code'.";
         private string _selectedLanguage = "C#";
         private string _logMessages = "System initialized...\nReady for analysis.\n";
         private bool _isProcessing = false;
-        private string _streamInfo = "Stream: Inactive";
-
+        
+        // Live view properties
+        private bool _hasLiveView = false;
+        private BitmapSource _liveViewSource;
+        private string _tempImagePath; // Temporary image path for current capture
+        
         private string connectedDevice = "No Device Connected";
         public string ConnectedDevice
         {
             get => connectedDevice;
             set { connectedDevice = value; OnPropertyChanged(); }
-        }
-
-        public string StreamInfo
-        {
-            get => _streamInfo;
-            set { _streamInfo = value; OnPropertyChanged(); }
         }
 
         public string ProjectStatus
@@ -99,6 +93,8 @@ namespace GUI.ViewModels
         public ObservableCollection<string> AvailableLanguages { get; set; }
 
         public ICommand SendMessageCommand { get; private set; }
+        public ICommand CaptureImageCommand { get; private set; }
+        public ICommand SaveImageCommand { get; private set; }
         public ICommand AnalyzeImageCommand { get; private set; }
         public ICommand GenerateCodeCommand { get; private set; }
         public ICommand ExportResultsCommand { get; private set; }
@@ -116,160 +112,27 @@ namespace GUI.ViewModels
 
             InitializeDemoData();
             InitializeCommands();
-            InitializeLiveStream();
-
-            // Subscribe để update khi DeviceService báo thay đổi
+            
+            // Subscribe to STATIC event with logging
+            System.Diagnostics.Debug.WriteLine("[ProjectViewModel] ===== SUBSCRIBING TO DevicesChanged EVENT =====");
             DeviceService.DevicesChanged += DeviceService_DevicesChanged;
+            
+            // Verify subscription using helper method
+            int subscriberCount = DeviceService.GetSubscriberCount();
+            System.Diagnostics.Debug.WriteLine($"[ProjectViewModel] Total subscribers after registration: {subscriberCount}");
 
             // Refresh lần đầu
             _ = RefreshDevices();
 
-            // Initialize device refresh timer
-            _deviceRefreshTimer = new DispatcherTimer();
-            _deviceRefreshTimer.Interval = TimeSpan.FromSeconds(1);
-            _deviceRefreshTimer.Tick += async (s, e) => await RefreshDevices();
-            _deviceRefreshTimer.Start();
-
-            LogMessages += $"[{DateTime.Now:HH:mm:ss}] Project ready with integrated live streaming.\n";
-        }
-
-        private void InitializeLiveStream()
-        {
-            // Initialize the live stream through DeviceService
-            bool streamInitialized = deviceService.InitializeLiveStream(targetFPS: 30, maxWidth: 1920, maxHeight: 1080);
-            
-            if (streamInitialized)
-            {
-                // Start live stream timer
-                _liveStreamTimer = new DispatcherTimer();
-                _liveStreamTimer.Interval = TimeSpan.FromMilliseconds(100); // 10 FPS for UI updates
-                _liveStreamTimer.Tick += LiveStreamTimer_Tick;
-                _liveStreamTimer.Start();
-                
-                LogMessages += $"[{DateTime.Now:HH:mm:ss}] Live stream service initialized successfully.\n";
-            }
-            else
-            {
-                LogMessages += $"[{DateTime.Now:HH:mm:ss}] Failed to initialize live stream service.\n";
-            }
-        }
-
-        private void LiveStreamTimer_Tick(object sender, EventArgs e)
-        {
-            UpdateLiveStream();
-        }
-
-        private void UpdateLiveStream()
-        {
-            try
-            {
-                if (deviceService.IsLiveStreamActive())
-                {
-                    // Create a simple test pattern only if devices are actually connected
-                    var connectedDevices = DeviceService.GetConnectedDevices();
-                    bool hasConnectedDevice = connectedDevices?.Any(d => d.IsConnected) == true;
-                    
-                    if (hasConnectedDevice)
-                    {
-                        var testImage = CreateTestLiveImage();
-                        
-                        if (testImage != null)
-                        {
-                            LiveViewSource = testImage;
-                            
-                            if (!HasLiveView)
-                            {
-                                HasLiveView = true;
-                                LogMessages += $"[{DateTime.Now:HH:mm:ss}] Live view started - device connected\n";
-                            }
-                            
-                            var (frames, fps, dropped) = deviceService.GetLiveStreamStats();
-                            StreamInfo = $"Stream: Active | {fps:F1} FPS | {frames} frames | {dropped} dropped";
-                        }
-                    }
-                    else
-                    {
-                        // No device connected - clear live view
-                        if (HasLiveView)
-                        {
-                            HasLiveView = false;
-                            LiveViewSource = null;
-                            StreamInfo = "Stream: No Device Connected";
-                            LogMessages += $"[{DateTime.Now:HH:mm:ss}] Live view stopped - no device connected\n";
-                        }
-                    }
-                }
-                else
-                {
-                    if (HasLiveView)
-                    {
-                        HasLiveView = false;
-                        LiveViewSource = null;
-                        StreamInfo = "Stream: Inactive";
-                        LogMessages += $"[{DateTime.Now:HH:mm:ss}] Live view stopped - stream inactive\n";
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"[ProjectViewModel] Live stream update error: {ex.Message}");
-                StreamInfo = "Stream: Error";
-                
-                // Try to restart the stream if it failed
-                try
-                {
-                    deviceService.InitializeLiveStream();
-                }
-                catch
-                {
-                    // Ignore restart errors
-                }
-            }
-        }
-
-        private BitmapSource CreateTestLiveImage()
-        {
-            try
-            {
-                // Create a simple test pattern that changes over time
-                int width = 640;
-                int height = 480;
-                byte[] pixels = new byte[width * height * 3]; // RGB
-
-                var timeMs = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
-                
-                for (int y = 0; y < height; y++)
-                {
-                    for (int x = 0; x < width; x++)
-                    {
-                        int index = (y * width + x) * 3;
-                        
-                        // Create animated color waves
-                        double waveX = Math.Sin((x + timeMs * 0.005) * 0.01) * 127 + 128;
-                        double waveY = Math.Sin((y + timeMs * 0.003) * 0.01) * 127 + 128;
-                        double waveTime = Math.Sin(timeMs * 0.001) * 50 + 50;
-                        
-                        pixels[index] = (byte)((waveX + waveTime) % 256);     // R
-                        pixels[index + 1] = (byte)((waveY + waveTime) % 256); // G
-                        pixels[index + 2] = (byte)((waveX + waveY) * 0.5 % 256); // B
-                    }
-                }
-
-                return BitmapSource.Create(width, height, 96, 96, PixelFormats.Rgb24, null, pixels, width * 3);
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"[ProjectViewModel] Test image creation error: {ex.Message}");
-                return null;
-            }
+            LogMessages += $"[{DateTime.Now:HH:mm:ss}] Project ready. Monitoring device changes...\n";
         }
 
         private void InitializeDemoData()
         {
             ChatMessages = new ObservableCollection<ChatMessage>
             {
-                new ChatMessage { Message = "Hello! I'm your AI assistant with integrated live streaming.", IsFromUser = false, Timestamp = DateTime.Now.AddMinutes(-5) },
-                new ChatMessage { Message = "The system now uses a unified DeviceService for all camera operations!", IsFromUser = false, Timestamp = DateTime.Now.AddMinutes(-4) }
+                new ChatMessage { Message = "Hello! I'm your AI assistant.", IsFromUser = false, Timestamp = DateTime.Now.AddMinutes(-5) },
+                new ChatMessage { Message = "The system uses DeviceService for camera operations.", IsFromUser = false, Timestamp = DateTime.Now.AddMinutes(-4) }
             };
 
             AnalysisResults = new ObservableCollection<AnalysisResult>();
@@ -283,6 +146,8 @@ namespace GUI.ViewModels
         private void InitializeCommands()
         {
             SendMessageCommand = new RelayCommand(async _ => await SendMessage());
+            CaptureImageCommand = new RelayCommand(async _ => await CaptureImage());
+            SaveImageCommand = new RelayCommand(_ => SaveImage());
             AnalyzeImageCommand = new RelayCommand(async _ => await AnalyzeImage());
             GenerateCodeCommand = new RelayCommand(async _ => await GenerateCode());
             ExportResultsCommand = new RelayCommand(_ => ExportResults());
@@ -293,6 +158,7 @@ namespace GUI.ViewModels
 
         private async void DeviceService_DevicesChanged(object sender, EventArgs e)
         {
+            System.Diagnostics.Debug.WriteLine("[ProjectViewModel] DevicesChanged event received!");
             await RefreshDevices();
         }
 
@@ -300,27 +166,176 @@ namespace GUI.ViewModels
         {
             try
             {
-                var connectedDevices = await Task.Run(() => DeviceService.GetConnectedDevices());
+                System.Diagnostics.Debug.WriteLine("[ProjectViewModel] Starting RefreshDevices...");
+                
+                // Discover devices using THIS instance's service
+                var allDevices = await Task.Run(() => deviceService.DiscoverAllDevices());
+
+                System.Diagnostics.Debug.WriteLine($"[ProjectViewModel] Discovered {allDevices?.Count ?? 0} devices");
 
                 await Application.Current.Dispatcher.InvokeAsync(() =>
                 {
-                    var connected = connectedDevices?.FirstOrDefault(d => d.IsConnected);
+                    // Find the first connected device
+                    var connected = allDevices?.FirstOrDefault(d => d.IsConnected);
 
                     if (connected != null)
                     {
-                        ConnectedDevice = !string.IsNullOrEmpty(connected.Name)
+                        string deviceName = !string.IsNullOrEmpty(connected.Name)
                             ? connected.Name
                             : connected.SerialNumber;
+                        
+                        System.Diagnostics.Debug.WriteLine($"[ProjectViewModel] Found connected device: {deviceName}");
+                        
+                        // Only update if changed
+                        if (ConnectedDevice != deviceName)
+                        {
+                            ConnectedDevice = deviceName;
+                            LogMessages += $"[{DateTime.Now:HH:mm:ss}] Device connected: {ConnectedDevice}\n";
+                        }
+                        
+                        // Update HasLiveView based on device connection
+                        if (!HasLiveView)
+                        {
+                            HasLiveView = true;
+                            System.Diagnostics.Debug.WriteLine("[ProjectViewModel] HasLiveView set to TRUE");
+                        }
                     }
                     else
                     {
-                        ConnectedDevice = "No Device Connected";
+                        System.Diagnostics.Debug.WriteLine("[ProjectViewModel] No connected device found");
+                        
+                        // Only update if changed
+                        if (ConnectedDevice != "No Device Connected")
+                        {
+                            ConnectedDevice = "No Device Connected";
+                            LogMessages += $"[{DateTime.Now:HH:mm:ss}] No device connected\n";
+                        }
+                        
+                        // Clear live view when no device
+                        if (HasLiveView)
+                        {
+                            HasLiveView = false;
+                            LiveViewSource = null;
+                            System.Diagnostics.Debug.WriteLine("[ProjectViewModel] HasLiveView set to FALSE");
+                        }
                     }
                 });
             }
             catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"[ProjectViewModel] RefreshDevices error: {ex.Message}");
                 LogMessages += $"[{DateTime.Now:HH:mm:ss}] Failed to refresh devices: {ex.Message}\n";
+            }
+        }
+
+        private async Task CaptureImage()
+        {
+            try
+            {
+                IsProcessing = true;
+                LogMessages += $"[{DateTime.Now:HH:mm:ss}] Capturing image from {ConnectedDevice}...\n";
+
+                // Get connected device
+                var allDevices = await Task.Run(() => deviceService.DiscoverAllDevices());
+                var connectedDevice = allDevices?.FirstOrDefault(d => d.IsConnected);
+
+                if (connectedDevice == null)
+                {
+                    LogMessages += $"[{DateTime.Now:HH:mm:ss}] No device connected\n";
+                    MessageBox.Show("Please connect a device first!", "No Device", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    IsProcessing = false;
+                    return;
+                }
+
+                // Create temporary directory for captures if it doesn't exist
+                string tempDir = Path.Combine(Path.GetTempPath(), "RobotArmCaptures");
+                if (!Directory.Exists(tempDir))
+                {
+                    Directory.CreateDirectory(tempDir);
+                }
+
+                // Generate temporary file path
+                _tempImagePath = Path.Combine(tempDir, $"temp_capture_{DateTime.Now:yyyyMMdd_HHmmss}.png");
+
+                // Capture image to temporary file
+                bool success = await Task.Run(() => deviceService.CaptureImage(connectedDevice, _tempImagePath));
+
+                if (success && File.Exists(_tempImagePath))
+                {
+                    // Load image and display in LiveView
+                    await Application.Current.Dispatcher.InvokeAsync(() =>
+                    {
+                        try
+                        {
+                            // Load image from file
+                            BitmapImage bitmap = new BitmapImage();
+                            bitmap.BeginInit();
+                            bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                            bitmap.UriSource = new Uri(_tempImagePath);
+                            bitmap.EndInit();
+                            bitmap.Freeze(); // Important for cross-thread usage
+
+                            LiveViewSource = bitmap;
+
+                            LogMessages += $"[{DateTime.Now:HH:mm:ss}] Image captured successfully\n";
+                            LogMessages += $"[{DateTime.Now:HH:mm:ss}] Image size: {new FileInfo(_tempImagePath).Length / 1024} KB\n";
+                        }
+                        catch (Exception ex)
+                        {
+                            LogMessages += $"[{DateTime.Now:HH:mm:ss}] Failed to load image: {ex.Message}\n";
+                        }
+                    });
+                }
+                else
+                {
+                    LogMessages += $"[{DateTime.Now:HH:mm:ss}] Failed to capture image\n";
+                    MessageBox.Show("Failed to capture image from device.", "Capture Failed", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                LogMessages += $"[{DateTime.Now:HH:mm:ss}] Capture error: {ex.Message}\n";
+                MessageBox.Show($"Error capturing image: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsProcessing = false;
+            }
+        }
+
+        private void SaveImage()
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(_tempImagePath) || !File.Exists(_tempImagePath))
+                {
+                    MessageBox.Show("No image to save. Please capture an image first.", "No Image", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                // Show save file dialog
+                var dialog = new Microsoft.Win32.SaveFileDialog
+                {
+                    Title = "Save Captured Image",
+                    Filter = "PNG Image|*.png|JPEG Image|*.jpg|All Files|*.*",
+                    DefaultExt = ".png",
+                    FileName = $"capture_{DateTime.Now:yyyyMMdd_HHmmss}.png",
+                    InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures)
+                };
+
+                if (dialog.ShowDialog() == true)
+                {
+                    // Copy temp file to selected location
+                    File.Copy(_tempImagePath, dialog.FileName, true);
+                    
+                    LogMessages += $"[{DateTime.Now:HH:mm:ss}] Image saved to: {dialog.FileName}\n";
+                    MessageBox.Show($"Image saved successfully to:\n{dialog.FileName}", "Save Complete", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                LogMessages += $"[{DateTime.Now:HH:mm:ss}] Save error: {ex.Message}\n";
+                MessageBox.Show($"Error saving image: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -350,31 +365,37 @@ namespace GUI.ViewModels
                 Timestamp = DateTime.Now
             });
 
-            LogMessages += $"[{DateTime.Now:HH:mm:ss}] User query processed with unified service\n";
+            LogMessages += $"[{DateTime.Now:HH:mm:ss}] User query processed\n";
         }
 
         private string GenerateAIResponse(string input)
         {
             var responses = new[]
             {
-                "I can see the live feed through our unified DeviceService! The integration is working perfectly.",
+                "I can help you with device management and image capture.",
                 "The unified architecture provides better performance and simpler maintenance.",
-                "Great! The DeviceService handles both camera management and live streaming seamlessly.",
+                "DeviceService handles camera management efficiently.",
                 "Perfect unified design! All functionality in one service - much cleaner.",
-                "I can analyze the live stream from the integrated service. The architecture is excellent!"
+                "I can help analyze captured images from your connected devices."
             };
             return responses[new Random().Next(responses.Length)];
         }
 
         private async Task AnalyzeImage()
         {
+            if (string.IsNullOrEmpty(_tempImagePath) || !File.Exists(_tempImagePath))
+            {
+                MessageBox.Show("Please capture an image first!", "No Image", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             IsProcessing = true;
-            LogMessages += $"[{DateTime.Now:HH:mm:ss}] Analyzing frame from integrated live stream...\n";
+            LogMessages += $"[{DateTime.Now:HH:mm:ss}] Analyzing captured image...\n";
 
             await Task.Delay(3000);
 
-            var objects = new[] { "Unified live pattern", "Integrated stream data", "DeviceService frame", "Optimized video data", "Single-service content" };
-            var types = new[] { "Live Stream", "Integrated Frame", "Unified Data", "Service Output" };
+            var objects = new[] { "Robot arm component", "Industrial part", "Assembly piece", "Manufacturing item", "Workshop object" };
+            var types = new[] { "Captured Image", "Static Frame", "Device Output", "Snapshot" };
 
             var newResult = new AnalysisResult
             {
@@ -385,11 +406,11 @@ namespace GUI.ViewModels
             AnalysisResults.Add(newResult);
 
             IsProcessing = false;
-            LogMessages += $"[{DateTime.Now:HH:mm:ss}] Analysis completed using unified service\n";
+            LogMessages += $"[{DateTime.Now:HH:mm:ss}] Analysis completed\n";
 
             ChatMessages.Add(new ChatMessage
             {
-                Message = $"Analyzed live stream via DeviceService: {newResult.Description} with {newResult.Confidence:P1} confidence. The unified architecture ensures optimal performance!",
+                Message = $"Analyzed image: {newResult.Description} with {newResult.Confidence:P1} confidence.",
                 IsFromUser = false,
                 Timestamp = DateTime.Now
             });
@@ -398,13 +419,13 @@ namespace GUI.ViewModels
         private async Task GenerateCode()
         {
             IsProcessing = true;
-            LogMessages += $"[{DateTime.Now:HH:mm:ss}] Generating {SelectedLanguage} code with unified architecture...\n";
+            LogMessages += $"[{DateTime.Now:HH:mm:ss}] Generating {SelectedLanguage} code...\n";
 
             await Task.Delay(2000);
 
             GenerateCodeForLanguage();
             IsProcessing = false;
-            LogMessages += $"[{DateTime.Now:HH:mm:ss}] Code generation completed using unified design\n";
+            LogMessages += $"[{DateTime.Now:HH:mm:ss}] Code generation completed\n";
         }
 
         private void GenerateCodeForLanguage()
@@ -412,58 +433,56 @@ namespace GUI.ViewModels
             switch (SelectedLanguage)
             {
                 case "C#":
-                    GeneratedCode = @"// C# Robot Control Code - Unified DeviceService Architecture
+                    GeneratedCode = @"// C# Robot Control Code - DeviceService Architecture
 using System;
 using RobotControl;
 using GUI.Services;
 
-public class UnifiedRobotController
+public class RobotController
 {
     private readonly DeviceService deviceService;
     
-    public UnifiedRobotController()
+    public RobotController()
     {
-        // Single service for all device operations
         deviceService = new DeviceService();
     }
     
-    public async Task ExecuteWithUnifiedLiveAnalysis()
+    public async Task ExecuteWithImageAnalysis()
     {
         var robot = new RobotArm();
         
-        // Initialize live streaming through DeviceService
-        if (deviceService.InitializeLiveStream(30, 1920, 1080))
+        // Discover and connect to camera
+        var devices = deviceService.DiscoverAllDevices();
+        var camera = devices.FirstOrDefault(d => d.Type.Contains(""Camera""));
+        
+        if (camera != null && deviceService.ConnectDevice(camera))
         {
-            while (deviceService.IsLiveStreamActive())
+            // Capture image for analysis
+            string imagePath = ""capture.jpg"";
+            if (deviceService.CaptureImage(camera, imagePath))
             {
-                // Get stream statistics
-                var (frames, fps, dropped) = deviceService.GetLiveStreamStats();
+                // Analyze captured image for objects
+                var objects = AnalyzeImage(imagePath);
                 
-                if (fps > 10) // Ensure good frame rate
+                foreach (var obj in objects)
                 {
-                    // Analyze current frame for objects
-                    var objects = AnalyzeLiveFrame();
-                    
-                    foreach (var obj in objects)
+                    if (obj.Confidence > 0.8)
                     {
-                        if (obj.Confidence > 0.8)
-                        {
-                            // Execute robot movement
-                            await robot.MoveToAsync(obj.X, obj.Y, obj.Z + 20.0);
-                            robot.OpenGripper();
-                            await robot.MoveToAsync(obj.X, obj.Y, obj.Z);
-                            robot.CloseGripper();
-                            
-                            // Place at destination
-                            await robot.MoveToAsync(200.0, 100.0, 50.0);
-                            robot.OpenGripper();
-                            break;
-                        }
+                        // Execute robot movement
+                        await robot.MoveToAsync(obj.X, obj.Y, obj.Z + 20.0);
+                        robot.OpenGripper();
+                        await robot.MoveToAsync(obj.X, obj.Y, obj.Z);
+                        robot.CloseGripper();
+                        
+                        // Place at destination
+                        await robot.MoveToAsync(200.0, 100.0, 50.0);
+                        robot.OpenGripper();
+                        break;
                     }
                 }
-                
-                await Task.Delay(100);
             }
+            
+            deviceService.DisconnectDevice(camera);
         }
         
         await robot.MoveToHomeAsync();
@@ -471,21 +490,21 @@ public class UnifiedRobotController
 }";
                     break;
                 default:
-                    GeneratedCode = $"// {SelectedLanguage} robot control code with unified DeviceService\n// Single service handles all device operations\n// Simplified architecture with better performance\n// Implementation uses integrated live streaming!";
+                    GeneratedCode = $"// {SelectedLanguage} robot control code with DeviceService\n// Single service handles all device operations\n// Simplified architecture with better performance";
                     break;
             }
         }
 
         private void ExportResults()
         {
-            LogMessages += $"[{DateTime.Now:HH:mm:ss}] Results exported from unified system\n";
-            MessageBox.Show("Analysis results exported successfully using unified architecture!", "Export Complete", MessageBoxButton.OK, MessageBoxImage.Information);
+            LogMessages += $"[{DateTime.Now:HH:mm:ss}] Results exported\n";
+            MessageBox.Show("Analysis results exported successfully!", "Export Complete", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private void ClearResults()
         {
             AnalysisResults.Clear();
-            GeneratedCode = "// Generated code will appear here\n// Using unified DeviceService architecture";
+            GeneratedCode = "// Generated code will appear here\n// Using DeviceService architecture";
             LogMessages += $"[{DateTime.Now:HH:mm:ss}] Results cleared\n";
         }
 
@@ -494,7 +513,7 @@ public class UnifiedRobotController
             if (!string.IsNullOrEmpty(GeneratedCode))
             {
                 Clipboard.SetText(GeneratedCode);
-                LogMessages += $"[{DateTime.Now:HH:mm:ss}] Unified code copied to clipboard\n";
+                LogMessages += $"[{DateTime.Now:HH:mm:ss}] Code copied to clipboard\n";
                 MessageBox.Show("Code copied to clipboard!", "Copy Complete", MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
@@ -507,10 +526,21 @@ public class UnifiedRobotController
 
         public void Dispose()
         {
-            _liveStreamTimer?.Stop();
-            _deviceRefreshTimer?.Stop();
-            
+            // Unsubscribe from static event
             DeviceService.DevicesChanged -= DeviceService_DevicesChanged;
+            
+            // Clean up temporary image file
+            if (!string.IsNullOrEmpty(_tempImagePath) && File.Exists(_tempImagePath))
+            {
+                try
+                {
+                    File.Delete(_tempImagePath);
+                }
+                catch
+                {
+                    // Ignore cleanup errors
+                }
+            }
             
             deviceService?.Dispose();
         }

@@ -24,31 +24,10 @@ namespace GUI.Services
         public bool IsConnected;
     }
 
-    // Add structs for LiveStreamProcessor functionality
-    [StructLayout(LayoutKind.Sequential)]
-    public struct ImageData
-    {
-        public int width;
-        public int height;
-        public int channels;
-        public int stride;
-        public IntPtr data;
-        public int dataSize;
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
-    public struct StreamConfig
-    {
-        public int targetFPS;
-        public int maxWidth;
-        public int maxHeight;
-        public bool enableProcessing;
-        public int compressionQuality;
-    }
 
     public class DeviceService : IDisposable
     {
-        private const string DLL_NAME = "DeviceInterface.dll"; // Single DLL for everything now
+        private const string DLL_NAME = "DeviceInterface.dll";
         private bool _disposed = false;
 
         // P/Invoke declarations for device management
@@ -88,60 +67,10 @@ namespace GUI.Services
         [DllImport(DLL_NAME, CallingConvention = CallingConvention.Cdecl)]
         private static extern bool IsMechEyeConnected();
 
-        // P/Invoke declarations for LiveStreamProcessor (now in same DLL)
-        [DllImport(DLL_NAME, CallingConvention = CallingConvention.Cdecl)]
-        private static extern bool InitializeStream(ref StreamConfig config);
-
-        [DllImport(DLL_NAME, CallingConvention = CallingConvention.Cdecl)]
-        private static extern void ShutdownStream();
-
-        [DllImport(DLL_NAME, CallingConvention = CallingConvention.Cdecl)]
-        private static extern bool IsStreamActive();
-
-        [DllImport(DLL_NAME, CallingConvention = CallingConvention.Cdecl)]
-        private static extern bool CaptureFrameFromSource(
-            IntPtr cameraHandle,
-            [MarshalAs(UnmanagedType.LPStr)] string sourceType,
-            ref ImageData outImageData);
-
-        [DllImport(DLL_NAME, CallingConvention = CallingConvention.Cdecl)]
-        private static extern IntPtr AllocateImageBuffer(int width, int height, int channels);
-
-        [DllImport(DLL_NAME, CallingConvention = CallingConvention.Cdecl)]
-        private static extern void FreeImageBuffer(IntPtr buffer);
-
-        [DllImport(DLL_NAME, CallingConvention = CallingConvention.Cdecl)]
-        private static extern void GetStreamStats(out int framesProcessed, out float averageFPS, out int droppedFrames);
-
+       
         [DllImport(DLL_NAME, CallingConvention = CallingConvention.Cdecl)]
         private static extern void CleanupDevices();
 
-
-        // NEW: Live stream functionality
-        public bool InitializeLiveStream(int targetFPS = 30, int maxWidth = 1920, int maxHeight = 1080)
-        {
-            var config = new StreamConfig
-            {
-                targetFPS = targetFPS,
-                maxWidth = maxWidth,
-                maxHeight = maxHeight,
-                enableProcessing = true,
-                compressionQuality = 85
-            };
-
-            return InitializeStream(ref config);
-        }
-
-        public bool IsLiveStreamActive()
-        {
-            return IsStreamActive();
-        }
-
-        public (int frames, float fps, int dropped) GetLiveStreamStats()
-        {
-            GetStreamStats(out int frames, out float fps, out int dropped);
-            return (frames, fps, dropped);
-        }
 
         // STATIC CONNECTION TRACKING to persist across all instances
         private static readonly Dictionary<string, bool> _globalConnectionStates = new Dictionary<string, bool>();
@@ -152,15 +81,35 @@ namespace GUI.Services
         private List<Device> _webcamDevices = new List<Device>();
         private List<Device> _mechEyeDevices = new List<Device>();
 
+        // Helper method to get subscriber count (accessible from outside)
+        public static int GetSubscriberCount()
+        {
+            return DevicesChanged?.GetInvocationList()?.Length ?? 0;
+        }
+
         private static void RaiseDevicesChanged()
         {
             try
             {
-                DevicesChanged?.Invoke(null, EventArgs.Empty);
+                // Count subscribers
+                int subscriberCount = DevicesChanged?.GetInvocationList()?.Length ?? 0;
+                System.Diagnostics.Debug.WriteLine($"[DeviceService] ===== RAISING DevicesChanged EVENT =====");
+                System.Diagnostics.Debug.WriteLine($"[DeviceService] Subscribers count: {subscriberCount}");
+                
+                if (DevicesChanged != null)
+                {
+                    DevicesChanged.Invoke(null, EventArgs.Empty);
+                    System.Diagnostics.Debug.WriteLine($"[DeviceService] Event invoked successfully");
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"[DeviceService] WARNING: No subscribers to DevicesChanged event!");
+                }
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"[DeviceService] DevicesChanged handler error: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[DeviceService] Stack trace: {ex.StackTrace}");
             }
         }
 
@@ -421,7 +370,6 @@ namespace GUI.Services
             {
                 try
                 {
-                    ShutdownStream(); // Clean up live stream
                     CleanupDevices(); // Clean up devices
                 }
                 catch (Exception ex)
