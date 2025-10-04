@@ -12,7 +12,7 @@
         <!-- Header -->
         <StackPanel Grid.Row="0" Margin="0,0,0,20">
             <TextBlock Text="Device Management" FontSize="24" FontWeight="Bold" Margin="0,0,0,10"/>
-            <TextBlock Text="Manage and connect to available devices" FontSize="14" Foreground="Gray"/>
+            <TextBlock Text="Scan, connect, and capture from Mech-Eye cameras and webcams" FontSize="14" Foreground="Gray"/>
         </StackPanel>
         
         <!-- Device List -->
@@ -45,12 +45,14 @@
                                     <StackPanel Grid.Column="1">
                                         <TextBlock Text="{Binding Name}" FontWeight="Bold"/>
                                         <TextBlock Text="{Binding Type}" FontSize="12" Foreground="Gray"/>
-                                        <TextBlock Text="{Binding Status}" FontSize="11" Foreground="{Binding StatusColor}"/>
+                                        <TextBlock Text="{Binding SerialNumber, StringFormat='S/N: {0}'}" FontSize="10" Foreground="Gray"/>
+                                        <TextBlock Text="{Binding IpAddress, StringFormat='IP: {0}'}" FontSize="10" Foreground="Gray"/>
                                     </StackPanel>
                                     
                                     <!-- Connection Status -->
                                     <TextBlock Grid.Column="2" Text="{Binding ConnectionStatus}" 
-                                               FontSize="10" Foreground="Green" VerticalAlignment="Center"/>
+                                               FontSize="10" VerticalAlignment="Center"
+                                               Foreground="{Binding StatusColor}"/>
                                 </Grid>
                             </Border>
                         </DataTemplate>
@@ -67,15 +69,25 @@
                     <Button Content="Disconnect" Height="40" Margin="0,0,0,10"
                             Command="{Binding DisconnectDeviceCommand}"
                             IsEnabled="{Binding CanDisconnect}"/>
-                    <Button Content="Refresh" Height="40" Margin="0,0,0,20"
+                    <Button Content="Capture Image" Height="40" Margin="0,0,0,10"
+                            Command="{Binding CaptureImageCommand}"
+                            IsEnabled="{Binding CanCapture}"/>
+                    <Button Content="Refresh Devices" Height="40" Margin="0,0,0,20"
                             Command="{Binding RefreshDevicesCommand}"/>
                     
                     <!-- Selected Device Info -->
                     <GroupBox Header="Selected Device" Margin="0,10,0,0">
                         <StackPanel Margin="5">
-                            <TextBlock Text="{Binding SelectedDevice.Name, StringFormat='Name: {0}'}" Margin="0,2"/>
-                            <TextBlock Text="{Binding SelectedDevice.Type, StringFormat='Type: {0}'}" Margin="0,2"/>
-                            <TextBlock Text="{Binding SelectedDevice.Status, StringFormat='Status: {0}'}" Margin="0,2"/>
+                            <TextBlock Text="{Binding SelectedDevice.Name, StringFormat='Name: {0}'}" 
+                                       Margin="0,2" TextWrapping="Wrap"/>
+                            <TextBlock Text="{Binding SelectedDevice.Type, StringFormat='Type: {0}'}" 
+                                       Margin="0,2"/>
+                            <TextBlock Text="{Binding SelectedDevice.Status, StringFormat='Status: {0}'}" 
+                                       Margin="0,2"/>
+                            <TextBlock Text="{Binding SelectedDevice.SerialNumber, StringFormat='Serial: {0}'}" 
+                                       Margin="0,2" TextWrapping="Wrap"/>
+                            <TextBlock Text="{Binding SelectedDevice.IpAddress, StringFormat='IP: {0}'}" 
+                                       Margin="0,2"/>
                         </StackPanel>
                     </GroupBox>
                 </StackPanel>
