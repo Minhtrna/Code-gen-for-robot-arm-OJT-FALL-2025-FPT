@@ -25,7 +25,13 @@ Known issue: Poor performance caused by continuous streaming and (admittedly) te
 ## v1.5.1
 
 Updated DeviceInterface DLL and App with fully functional camera support.
-
-
+Added Camera tab for full mech-eye camera control, Simulate/Validate tab for result simulate with GAZEBO and ROS
 Removed image/video streaming feature for better stability and performance.
-<img width="856" height="1007" alt="ojt-Page-2 (1)" src="https://github.com/user-attachments/assets/1048561f-e310-4200-9dbd-75300054adbb" />
+
+## v1.5.1a ( updated version of 1.5.1 )
+
+Added Camera tab for full mech-eye camera control, Simulate/Validate tab for result simulate with GAZEBO and ROS
+
+
+<img width="1152" height="896" alt="OJT_fig_1" src="https://github.com/user-attachments/assets/90cc936f-b992-4ab6-8923-5c2c72240366" />
+
