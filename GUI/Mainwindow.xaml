@@ -16,8 +16,18 @@
             <TabItem Header="Project" FontSize="14" Padding="10,5">
                 <views:ProjectView/>
             </TabItem>
+
+			<!-- Camera -->
+			<TabItem Header="Camera" FontSize="14" Padding="10,5">
+				<views:CameraView/>
+			</TabItem>
+			
+			<!--Validate/Simulate-->
+			<TabItem Header="Validate/Simulate" FontSize="14" Padding="10,5">
+				<views:ValidateSimulateView/>
+			</TabItem>
             
-            <!-- Settings Tab (optional) -->
+            <!-- Settings Tab -->
             <TabItem Header="Settings" FontSize="14" Padding="10,5">
                 <views:SettingsView/>
             </TabItem>
