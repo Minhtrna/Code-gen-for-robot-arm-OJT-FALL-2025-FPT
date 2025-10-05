@@ -32,6 +32,9 @@ Removed image/video streaming feature for better stability and performance.
 
 Added Camera tab for full mech-eye camera control, Simulate/Validate tab for result simulate with GAZEBO and ROS
 
+## v1.5.1b ( updated version of 1.5.1 )
+
+Added custom classifications model for object features work.
 
 <img width="1152" height="896" alt="OJT_fig_1" src="https://github.com/user-attachments/assets/90cc936f-b992-4ab6-8923-5c2c72240366" />
 
