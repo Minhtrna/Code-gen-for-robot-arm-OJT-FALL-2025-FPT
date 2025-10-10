@@ -86,7 +86,7 @@ dynamic adaptation to changing task requirements and environmental conditions.
 
 MobileVLMV2\cite{chu2024mobilevlm} is a vision-language model that combines the strengths of both visual and textual data to perform various tasks, including image captioning, visual question answering, and code generation. The model is designed to be lightweight and efficient, making it suitable for deployment on devices with limited computational resources.
 Compared to the older version MobileVLM\cite{chu2023mobilevlm}, MobileVLMV2\cite{chu2024mobilevlm} introduces several improvements, including enhanced model architecture, better training techniques, and increased robustness to various input types. These enhancements lead to improved performance across a range of tasks while maintaining the model's efficiency.
-Figure \ref{fig:latency-comparison-mobile} shows the comparison of SOTA VLMs in terms of average performance across several standard benchmarks and speed (tested on an NVIDIA Jeston Orin with lamma.cpp). MobileVLMV2 achieves new state-of-the-art results with much faster inference speed. Figure \ref{fig:model-scaling} shows the scaling of MobileVLMV2 model, which demonstrates that as the model size increases, the performance on various benchmarks also improves, indicating the effectiveness of the model architecture and training approach.
+Figure \ref{fig:latency-comparison-mobile} shows the comparison of SOTA VLMs in terms of average performance across several standard benchmarks and speed (tested on an NVIDIA Jeston Orin with lamma.cpp). MobileVLMV2 achieves new state-of-the-art results with much faster inference speed. Figure \ref{fig:model-scaling} shows the scaling of MobileVLMV2 model, which demonstrates that as the model size increases, the performance on various benchmarks also improves, indicating the effectiveness of the model architecture and training approach, compared to its predecessor.
 \begin{figure}[t]
   \centering
    \includegraphics[width=.87\columnwidth]{figures/mobilevlm_latency_mobile.pdf}
@@ -97,6 +97,7 @@ Figure \ref{fig:latency-comparison-mobile} shows the comparison of SOTA VLMs in 
 \begin{figure}[ht]
   \centering
    \includegraphics[width=.87\columnwidth]{figures/mobilevlm_scaling.pdf}
+   \caption{Scaling of MobileVLMV2 model. As the model size increases, the performance on various benchmarks also improves, indicating the effectiveness of the model architecture and training approach.}
    \label{fig:model-scaling}
 \end{figure}
 
@@ -113,6 +114,28 @@ The vision model will be integrated into the system to provide real-time object 
 
 However, we later found out that the YOLOv11 model was too large and computationally intensive for our limited hardware resources. Then we decided to switch to a custom lightweight model based on MobileNetV2\cite{sandler2018mobilenetv2} architecture.
 This model was an experimental model that our team leader developed when he worked at FPT University AiTA-lab\cite{aita_lab}, which was optimized for speed and efficiency while still maintaining a reasonable level of accuracy.
+
+\subsubsection{Classification Experiment}
+
+We conducted an experiment to evaluate the performance of our custom MobileNetV2-based model on a classification task. 
+The experiment involved training the model on a dataset of industrial objects and CIFAR10\cite{krizhevsky2009learning} dataset to assess its accuracy and efficiency.
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=.97\columnwidth]{340k_training_curves_postactive_W_autoaugments_2_2.png}
+  \caption{Training curves of our MobileNetV2-based model on CIFAR10 datasets. The model demonstrates competitive performance while maintaining efficient training dynamics.}
+  \label{fig:training-curves}
+\end{figure}
+
+Train and test result on CIFAR10 dataset in figure \ref{fig:training-curves} shows the training curves of our MobileNetV2-based model on the CIFAR10 dataset. 
+This model have 0.34M parameters and 0.06 GFLOPs, which is significantly smaller and more efficient than many state-of-the-art models while it manintains competitive performance.
+The small size and low computational requirements of our model make it suitable for deployment on devices with limited resources, such as embedded systems used in robotics and it illustrates the abilities of cost-effective models in real-world applications.
+
+\subsubsection{Object Detection Experiment}
+
+We also conducted an experiment to evaluate the performance of our custom MobileNetV2-based model on an object detection task.
+We used the Pascal VOC\cite{everingham2010pascal} dataset for this experiment, which is a widely used benchmark for object detection tasks.
+Model was modified by added \textbf{SSD(Single Shot MultiBox Detector)} head on top of the MobileNetV2-based backbone to enable object detection capabilities.
+
 
 \subsection{Datasets}
 
