@@ -137,13 +137,6 @@ We used the Pascal VOC\cite{everingham2010pascal} dataset for this experiment, w
 Model was modified by added \textbf{SSD(Single Shot MultiBox Detector)} head on top of the MobileNetV2-based backbone to enable object detection capabilities.
 
 
-\subsection{Datasets}
-
-We planned to use a combination of publicly available datasets and custom datasets tailored to our specific robotic tasks. However, the data collection process was difficult, most of the detailed robotic datasets were closed and owned by large companies. So we decided to use COCO\cite{DBLP:journals/corr/LinMBHPRDZ14} and Pascal\cite{everingham2010pascal} VOC for the vision model development process.
-The model would then be fine-tuned on a more specific dataset of industrial objects that we thought would appear in normal working conditions.
-Overall, this project is experimental in nature, so we will limit the variety of objects to suit the limited time and resources available.
-For the VLMs for generating the robot code, we plan to reuse pretrained models with fine-tuning on a smaller dataset of robotic tasks if needed. This approach allows us to leverage the knowledge already embedded in the models while adapting them to our specific application.
-
 
 \section{Results and Discussion}
 
