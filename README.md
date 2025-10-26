@@ -67,3 +67,4 @@ The objective of this project is to develop a **complete application system** th
 - Complete the code generation and translation module.  
 - Integrate language-based task input for auto code synthesis.  
 - Enhance simulation accuracy and add error-feedback loop for generated code.
+- Complete work space setup for simulate
