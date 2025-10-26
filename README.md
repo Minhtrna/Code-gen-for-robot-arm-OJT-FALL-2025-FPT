@@ -1,4 +1,4 @@
-# Code-gen-for-robot-arm — OJT FALL 2025 (FPT)
+# Code gen for robot arm — OJT FALL 2025 (FPT)
 
 This repository contains our internship project at **Vietdynamics**, focusing on building an integrated system for robot arm control, code generation, and simulation.
 
