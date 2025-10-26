@@ -247,6 +247,8 @@ namespace GUI.ViewModels
                     LoadRobot(RobotType.IRB6700);
                 else if (value == "ABB IRB 4600")
                     LoadRobot(RobotType.IRB4600);
+                else if (value == "AUBO I10")
+                    LoadRobot(RobotType.AUBO_I10);
             }
         }
 

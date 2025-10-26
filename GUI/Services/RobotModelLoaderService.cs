@@ -30,6 +30,7 @@ namespace GUI.Services
             {
                 RobotType.IRB6700 => "IRB6700",
                 RobotType.IRB4600 => "IRB4600",
+                RobotType.AUBO_I10 => "AUBO_I10",
                 _ => "IRB6700"
             };
 
