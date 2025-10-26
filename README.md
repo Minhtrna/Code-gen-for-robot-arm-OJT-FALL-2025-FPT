@@ -54,7 +54,7 @@ The objective of this project is to develop a **complete application system** th
 - Added **custom classification model** for object feature work.
 
 ### v1.5.2
-- Added **robot simulation and validation features.**  
+- Added **Basic robot simulation.**  
   Thanks to [RobotArmHelix](https://github.com/Gabryxx7/RobotArmHelix) for integration support.
 
 <p align="center">
