@@ -36,5 +36,9 @@ Added Camera tab for full mech-eye camera control, Simulate/Validate tab for res
 
 Added custom classifications model for object features work.
 
-<img width="1152" height="896" alt="OJT_fig_1" src="https://github.com/user-attachments/assets/90cc936f-b992-4ab6-8923-5c2c72240366" />
+## v1.5.2 
+
+Add robot simulation and validation features. Features has been achieved thanks to https://github.com/Gabryxx7/RobotArmHelix
+
+<img width="500" height="500" alt="image" src="https://github.com/user-attachments/assets/d5cb3a14-d951-4dd4-9237-8f14d3558e84" />
 
