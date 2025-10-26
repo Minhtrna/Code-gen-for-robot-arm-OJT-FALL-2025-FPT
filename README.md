@@ -30,6 +30,16 @@ The objective of this project is to develop a **complete application system** th
 
 ---
 
+## Update
+
+### v1.5.2
+- Added **Basic robot simulation.**  
+  Thanks to [RobotArmHelix](https://github.com/Gabryxx7/RobotArmHelix) for integration support.
+<p align="center">
+  <img width="500" height="500" alt="Simulation preview" src="https://github.com/user-attachments/assets/d5cb3a14-d951-4dd4-9237-8f14d3558e84" />
+</p>
+
+---
 ## 🧩 Changelog
 
 ### v1.0.0
@@ -56,10 +66,6 @@ The objective of this project is to develop a **complete application system** th
 ### v1.5.2
 - Added **Basic robot simulation.**  
   Thanks to [RobotArmHelix](https://github.com/Gabryxx7/RobotArmHelix) for integration support.
-
-<p align="center">
-  <img width="500" height="500" alt="Simulation preview" src="https://github.com/user-attachments/assets/d5cb3a14-d951-4dd4-9237-8f14d3558e84" />
-</p>
 
 ---
 
