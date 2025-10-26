@@ -15,6 +15,10 @@
 		<Resource Include="Resources\**\*" />
 	</ItemGroup>
 
+	<ItemGroup>
+		<PackageReference Include="HelixToolkit.Wpf" Version="2.27.3" />
+	</ItemGroup>
+
 	<!-- Enhanced DLL copy with debugging -->
 	<Target Name="CopyNativeDlls" BeforeTargets="Build">
 		<PropertyGroup>
