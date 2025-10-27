@@ -220,33 +220,8 @@
 					<RowDefinition Height="*"/>
 				</Grid.RowDefinitions>
 
-				<!-- Code Input -->
-				<GroupBox Grid.Row="0" Header="Code" Margin="0,0,0,10">
-					<Grid>
-						<Grid.RowDefinitions>
-							<RowDefinition Height="*"/>
-							<RowDefinition Height="Auto"/>
-						</Grid.RowDefinitions>
-
-						<TextBox Grid.Row="0" Text="{Binding CodeToValidate, UpdateSourceTrigger=PropertyChanged}"
-                                FontFamily="Consolas" FontSize="11" Height="120"
-                                TextWrapping="Wrap" AcceptsReturn="True"
-                                VerticalScrollBarVisibility="Auto" Margin="0,0,0,5"/>
-
-						<StackPanel Grid.Row="1" Orientation="Horizontal">
-							<Button Content="📁 Load" Margin="0,0,5,0" Padding="6,3"
-                                    Command="{Binding LoadCodeCommand}"/>
-							<Button Content="✅ Validate" Margin="0,0,5,0" Padding="6,3"
-                                    Command="{Binding ValidateCodeCommand}"
-                                    IsEnabled="{Binding HasCodeToValidate}"/>
-							<Button Content="🗑️ Clear" Padding="6,3"
-                                    Command="{Binding ClearCodeCommand}"/>
-						</StackPanel>
-					</Grid>
-				</GroupBox>
-
 				<!-- Validation Setting -->
-				<GroupBox Grid.Row="1" Header="Validation Setting" Margin="0,0,0,10">
+				<GroupBox Grid.Row="0" Header="Validation Setting" Margin="0,0,0,10">
 					<StackPanel Margin="10" HorizontalAlignment="Left">
 						<ComboBox Width="150" Margin="0,0,0,5"
                               ItemsSource="{Binding RobotModel}"
@@ -261,7 +236,7 @@
 				</GroupBox>
 
 				<!-- Validation Results -->
-				<GroupBox Grid.Row="2" Header="Validation Results">
+				<GroupBox Grid.Row="1" Header="Validation Results">
 					<TabControl>
 						<!-- Issues Tab -->
 						<TabItem Header="🚨 Issues">
