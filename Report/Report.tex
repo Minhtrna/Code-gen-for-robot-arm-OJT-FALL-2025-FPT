@@ -23,7 +23,7 @@
 
 \begin{document}
 
-\title{Code Generation With Robotics-Oriented Large Language Models for Robot Arms Applications.}
+\title{Code Generation With Robotics-Oriented Vision Language Models for Robot Arms Applications.}
 
 \author{
 \IEEEauthorblockN{
@@ -43,26 +43,26 @@ Emails: quantran102005@gmail.com, Luutronghieu0709@gmail.com, congkhanhtruongthi
 
 \begin{abstract}
 This report presents the outcome of our internship project of our team, who worked on a project entitled \textbf{Code Generation with Large Language Models for Robot Arms Applications.} 
-The work focuses on applying large language models (LLMs) to automatically generate and adapt control code for industrial robot arms. Throughout the project, the team implemented a system that integrates LLM-based code generation, task-specific prompt design, and real-time code validation for robotic motion control. The report discusses the design process, implementation details, encountered challenges, and experimental evaluations of the proposed approach. Results demonstrate that LLMs can significantly accelerate robot programming workflows while maintaining adaptability to various robot configurations. The source code and implementation details are publicly available at: \href{https://github.com/Minhtrna/Code-gen-for-robot-arm-OJT-FALL-2025-FPT}{GitHub/Code-gen-for-robot-arm-OJT-FALL-2025-FPT}
+The work focuses on applying Robotics-Oriented Vision Language Models (VLMs) to automatically generate and adapt control code for industrial robot arms. Throughout the project, the team implemented a system that integrates VLM-based code generation, task-specific prompt design, and real-time code validation for robotic motion control. The report discusses the design process, implementation details, encountered challenges, and experimental evaluations of the proposed approach. Results demonstrate that VLMs can significantly accelerate robot programming workflows while maintaining adaptability to various robot configurations. The source code and implementation details are publicly available at: \href{https://github.com/Minhtrna/Code-gen-for-robot-arm-OJT-FALL-2025-FPT}{GitHub/Code-gen-for-robot-arm-OJT-FALL-2025-FPT}
 \end{abstract}
 
 
 \section{Introduction}
 The rapid advancement of artificial intelligence (AI) and machine learning has led to the development of vision language models (VLMs) that can understand and generate human-like text. These models have shown remarkable capabilities in various natural language processing tasks, including code generation. The ability to generate code automatically has significant implications for the software development industry, particularly in specialized fields such as robotics.
 During our internship at VietDynamic JSC, we had the opportunity to work on a project focused on leveraging VLMs for code generation in robot arm applications. The project aimed to explore how VLMs can assist in automating the coding process, thereby improving efficiency and reducing the time required for software development in robotics.
-This report provides a comprehensive overview of our internship experience, including the tasks we undertook, the 
+This report provides a comprehensive overview of our internship experience, including the tasks we undertook, the
 challenges we encountered, and the skills we developed. We also discuss the potential applications of VLMs in the robotics industry and their impact on future developments.
 
 \section{Related Work}
-Recent advancements in large language models (LLMs) have demonstrated their potential in various applications, including code generation for robotic systems. Notable works in this domain include Mu et al.'s RoboCodeX\cite{mu2024robocodex}, which explores the use of LLMs to generate code for robotic tasks, showcasing the ability of these models to understand and execute complex instructions. Another significant contribution is the Robotic Programmer by Xie et al.\cite{xie2025robotic}, which focuses on video-instructed policy code generation for robotic manipulation, highlighting the integration of visual inputs with LLMs to enhance robotic capabilities. These studies underscore the transformative potential of LLMs in automating and optimizing code generation for robotics, paving the way for more efficient and intelligent robotic systems.
-Other relevant works include the development of vision-language models (VLMs) like MobileVLM\cite{chu2023mobilevlm}, which are designed to handle multimodal inputs, making them suitable for applications that require both visual and textual understanding. The integration of VLMs in robotics can significantly enhance the interaction between robots and their environments, enabling more sophisticated and context-aware behaviors.
+Recent advancements in large language models (VLMs) have demonstrated their potential in various applications, including code generation for robotic systems. Notable works in this domain include Mu et al.'s RoboCodeX\cite{mu2024robocodex}, which explores the use of VLMs to generate code for robotic tasks, showcasing the ability of these models to understand and execute complex instructions. Another significant contribution is the Robotic Programmer by Xie et al.\cite{xie2025robotic}, which focuses on video-instructed policy code generation for robotic manipulation, highlighting the integration of visual inputs with VLMs to enhance robotic capabilities. These studies underscore the transformative potential of VLMs in automating and optimizing code generation for robotics, paving the way for more efficient and intelligent robotic systems.
+Other relevant works include the development of Large-language models (VLMs) like MobileVLM\cite{chu2023mobilevlm}, which are designed to handle multimodal inputs, making them suitable for applications that require both visual and textual understanding. The integration of VLMs in robotics can significantly enhance the interaction between robots and their environments, enabling more sophisticated and context-aware behaviors.
 
 \section{Methodology}
 \subsection{Overview}
 \includegraphics[width=7cm]{OJT_fig_1.png}
 
-We leverage the capabilities of vision language models (VLMs) to generate code for robot arm applications. Combined with visual information from dedicated sensors like Mech-EYE we could enhance the understanding of the environment and improve the accuracy of the generated code. 
-The overall pipeline consists of several key components: Mech-EYE 3D industrial camera, VLMs, and a simulator for validating the generated code without the need of physical hardware. The Mech-EYE camera captures high-resolution images and 3D point clouds of the robot's surroundings, providing essential visual context for the VLMs. The VLMs, such as MobileVLM or specialized models like RoboCodeX\cite{mu2024robocodex}, are then employed to generate code based on the visual data and specific task requirements. More comprehensive tasks such as video instructions for robotic manipulation are also considered \cite{xie2025robotic}.
+We leverage the capabilities of vision language models (VLMs) to generate code for robot arm applications. Combined with visual information from dedicated sensors like Mech-EYE we could enhance the understanding of the environment and improve the accuracy of the generated code.
+The overall pipeline consists of several key components: Intel Realsense 3D camera, VLMs, and a simulator for validating the generated code without the need of physical hardware. The Intel Realsense camera captures high-resolution images and 3D point clouds of the robot's surroundings, providing essential visual context for the VLMs. The VLMs, such as MobileVLM\cite{chu2023mobilevlm}, RoboCodeX\cite{mu2024robocodex}  or specialized models for robotic manipulation like GeminiRobotics\cite{team2025gemini}, are then employed to generate code based on the visual data and specific task requirements. More comprehensive tasks such as video instructions for robotic manipulation are also considered \cite{xie2025robotic}.
 Finally, the generated code is executed in a controlled environment built with \href{https://docs.ros.org/}{ROS2} and \href{http://gazebosim.org/}{GAZEBO} to validate its functionality and performance.
 \subsection{Systems Design}
 \includegraphics[width=8cm]{Design.png}
@@ -71,38 +71,22 @@ We designed a modular system architecture to facilitate the integration of vario
 The architecture consists of the following modules:
 \begin{itemize}
     \item \textbf{GUI Module:} This module is responsible for user interaction. It allows users to input task specifications, view visual data from the Mech-EYE or Intel Realsense cameras, and monitor the code generation process.
-    user can also select the LLM they want to use for code generation, do work with camera like calibration, capturing image, point cloud, etc.
+    user can also select the VLM they want to use for code generation, do work with camera like calibration, capturing image, point cloud, etc.
     \item \textbf{Logic Core Module:} This module manages the communication with the various system components, ensuring smooth data flow and coordination between modules. It also handles all Logic task like communication with hardwares, processing user inputs, data, etc.
-    \item \textbf{LLM and Vision Integration Module:} This module interfaces with the selected vision language models and vision models. It handles the input of visual data and task specifications, and it retrieves the generated code from the models. 
+    \item \textbf{VLM and Vision Integration Module:} This module interfaces with the selected vision language models and vision models. It handles the input of visual data and task specifications, and it retrieves the generated code from the models. 
     \item \textbf{Simulate and Validate Module:} This module let user simulate and assess the performance of the generated code based on predefined metrics such as accuracy, efficiency, and robustness. It provides feedback for further refinement of the VLMs generated code and the overall system.
 \end{itemize}   
 
-\subsection{Large Language Models for Code Generation}
+\subsection{Robotics-Oriented Vision Language Models}
 
-Robotic team is responsible for the integration and fine-tuning of the vision language models (VLMs) used for code generation. They ensure that the selected VLMs are properly configured to handle the specific requirements of robot arm applications.
-The team also works on optimizing the performance of the VLMs by fine-tuning them on relevant datasets and adjusting hyperparameters to improve code generation accuracy.
-We plan to use MobileVLMV2\cite{chu2024mobilevlm} as the base model for our code generation tasks due to its efficiency and effectiveness in handling multimodal inputs. The model will be fine-tuned on a custom dataset of robotic tasks to enhance its performance in generating context-aware code.
-The VLM will be integrated into the system to provide real-time code generation capabilities, allowing for
-dynamic adaptation to changing task requirements and environmental conditions.
+The robotics team is responsible for the integration and fine-tuning of the large language models (VLMs) used for code generation. They ensure that the selected VLMs are properly configured to handle the specific requirements of robot arm applications. The team also works on optimizing the performance of the VLMs by fine-tuning them on relevant datasets and adjusting hyperparameters to improve code generation accuracy.
+Initially, we planned to use MobileVLMV2 \cite{chu2024mobilevlm} as the base model for our code generation tasks due to its efficiency and effectiveness in handling multimodal inputs. The model was fine-tuned on a custom dataset of robotic tasks to enhance its performance in generating context-aware code. It was also integrated into the system to provide real-time code generation capabilities, allowing for dynamic adaptation to changing task requirements and environmental conditions.
+However, due to the severe shortage of operational robot data necessary for fine-tuning, adapting the model effectively became infeasible. The scarcity of domain-specific datasets for robot control and manipulation tasks limited the model's ability to generalize and perform robust code generation for complex robotic operations.
+Consequently, after encountering these limitations we transitioned to utilizing Gemini Robotics. Gemini Robotics is an advanced Vision-Language-Action model designed specifically for robotics applications, with strong embodied reasoning and 3D spatial understanding. This model provides more accurate, reactive, and dexterous control code generation suited for real-world robotic systems, and can adapt flexibly to a wide range of manipulation tasks and robotic platforms.\cite{abdolmaleki2025gemini,team2025gemini}
 
-MobileVLMV2\cite{chu2024mobilevlm} is a vision-language model that combines the strengths of both visual and textual data to perform various tasks, including image captioning, visual question answering, and code generation. The model is designed to be lightweight and efficient, making it suitable for deployment on devices with limited computational resources.
-Compared to the older version MobileVLM\cite{chu2023mobilevlm}, MobileVLMV2\cite{chu2024mobilevlm} introduces several improvements, including enhanced model architecture, better training techniques, and increased robustness to various input types. These enhancements lead to improved performance across a range of tasks while maintaining the model's efficiency.
-Figure \ref{fig:latency-comparison-mobile} shows the comparison of SOTA VLMs in terms of average performance across several standard benchmarks and speed (tested on an NVIDIA Jeston Orin with lamma.cpp). MobileVLMV2 achieves new state-of-the-art results with much faster inference speed. Figure \ref{fig:model-scaling} shows the scaling of MobileVLMV2 model, which demonstrates that as the model size increases, the performance on various benchmarks also improves, indicating the effectiveness of the model architecture and training approach, compared to its predecessor.
-\begin{figure}[t]
-  \centering
-   \includegraphics[width=.87\columnwidth]{figures/mobilevlm_latency_mobile.pdf}
-   \caption{Comparison of SOTA VLMs in terms of average performance across several standard benchmarks and speed (tested on an NVIDIA Jeston Orin with lamma.cpp). MobileVLMV2 achieves new state-of-the-art results with much faster inference speed.}
-   \label{fig:latency-comparison-mobile}
-\end{figure}
+Recent developments in Gemini Robotics 2.0\cite{team2025gemini} have further pushed the boundaries of generalist robots by incorporating advanced embodied reasoning, thinking, and motion transfer capabilities. This iteration enhances the model's ability to understand complex environments and execute sophisticated tasks, making it a promising choice for our code generation needs in robot arm applications. But the current available version Gemini Robotics 1.5 have the abilities to process visual inputs it self but it is limited to 2D image inputs only, which may not provide sufficient spatial context for accurate code generation in complex robotic tasks. By integrating a dedicated vision model that can capture and interpret 3D spatial information from the environment, we can enhance the overall performance of the Gemini Robotics model. This integration will allow the system to better understand the spatial relationships and dynamics of objects within the robot's workspace, leading to more precise and effective code generation for robotic manipulation tasks.
+Though the model come with self contained vision capabilities, a dedicated local 3D vision model is necessary when it meight reduce latency and cost associated with cloud-based processing. Additionally, a specialized vision model can be fine-tuned to the specific environmental conditions and object types encountered in our robot arm applications, thereby improving the accuracy and reliability of visual perception. This tailored approach allows for better integration with the Gemini Robotics model, ultimately enhancing the overall system's performance in generating context-aware and effective code for robotic tasks.
 
-\begin{figure}[ht]
-  \centering
-   \includegraphics[width=.87\columnwidth]{figures/mobilevlm_scaling.pdf}
-   \caption{Scaling of MobileVLMV2 model. As the model size increases, the performance on various benchmarks also improves, indicating the effectiveness of the model architecture and training approach.}
-   \label{fig:model-scaling}
-\end{figure}
-
-\newpage
 
 \subsection{Vision Models}
 
@@ -137,6 +121,18 @@ We also conducted an experiment to evaluate the performance of our custom Mobile
 We used the Pascal VOC\cite{everingham2010pascal} dataset for this experiment, which is a widely used benchmark for object detection tasks.
 Model was modified by added \textbf{SSD(Single Shot MultiBox Detector)} head on top of the MobileNetV2-based backbone to enable object detection capabilities.
 
+\subsection{Validation and Simulation}
+
+To validate the generated code, we implemented a  built-in Inverse Kinematics (IK) solver to simulate basic robot's movements.
+Application support various robot models, including popular industrial robot arms like ABB, AUBO and others models in future. while build-in simulator allows user to test environment setup and robot's movements it lack of advanced physics simulation which is crucial for realistic movement and interaction validation.
+Ros and Gazebo provide a more comprehensive simulation environment with accurate physics modeling, allowing us to validate the generated code in a realistic setting. We integrated our application with ROS and Gazebo and allow seamless workflow between code generation and simulation validation.
+This setup allows us to test the functionality and performance of the generated code without the need for physical hardware.
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=.97\columnwidth]{Sim.png}
+  \caption{Built-in simulation environment for testing robot movements.}
+  \label{fig:simulation-environment}
+\end{figure}
 
 
 \section{Results and Discussion}
@@ -146,7 +142,7 @@ Model was modified by added \textbf{SSD(Single Shot MultiBox Detector)} head on 
 \section{Future Work}
 
 \section{Acknowledgment}
-Our team would like to express sincere gratitude to \textbf{VietDynamic JSC} for providing the opportunity and resources to carry out this project. We would also like to extend our special thanks to our instructor, \textbf{Mr. Tran Trong Toan}, for his dedicated guidance, valuable feedback, and continuous support throughout the internship. His expertise and encouragement were essential in shaping our understanding and successful application of large language models in robotics.
+Our team would like to express sincere gratitude to \textbf{VietDynamic JSC} for providing the opportunity and resources to carry out this project. We would also like to extend our special thanks to our instructor, \textbf{Mr. Tran Trong Toan}, for his dedicated guidance, valuable feedback, and continuous support throughout the internship. His expertise and encouragement were essential in shaping our understanding and successful application of Robotics-Oriented Vision Language models in robotics.
 
 \bibliographystyle{IEEEtran}
 \bibliography{References}
