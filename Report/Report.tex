@@ -23,7 +23,7 @@
 
 \begin{document}
 
-\title{Internship Report - Code Generation with Vision Language Models for Robot arms application.}
+\title{Code Generation With Robotics-Oriented Large Language Models for Robot Arms Applications.}
 
 \author{
 \IEEEauthorblockN{
@@ -33,7 +33,7 @@ Nguyen Cong Khanh\,\orcidlink{0009-0005-6197-7565},
 Nguyen Quang Trung\,\orcidlink{0009-0005-5265-2208}
 }
 \IEEEauthorblockA{
-\textit{Department of Artificial Intelligence} \\
+\textit{Instructor - Mr.Tran Trong Toan} \\
 \textit{FPT University | VietDynamic JSC}\\
 Ho Chi Minh City, Vietnam\\
 Emails: quantran102005@gmail.com, Luutronghieu0709@gmail.com, congkhanhtruongthi@gmail.com, trungnqse183108@fpt.edu.vn
@@ -42,9 +42,10 @@ Emails: quantran102005@gmail.com, Luutronghieu0709@gmail.com, congkhanhtruongthi
 \maketitle
 
 \begin{abstract}
-This report presents the internship experience of our team, who worked on a project titled "Code Generation with Vision Language Models for Robot arms application." The internship took place at VietDynamic JSC from September 2025 to December 2025. The primary objective of the project was to explore the capabilities of vision language models (VLMs) in generating code for robot arm applications. The report details the tasks undertaken, challenges faced, and the skills acquired during the internship. It also highlights the significance of VLMs in automating code generation and their potential impact on the robotics industry. We express our gratitude to VietDynamic JSC for providing this valuable learning opportunity. 
-Code is available at: \href{https://github.com/Minhtrna/Code-gen-for-robot-arm-OJT-FALL-2025-FPT}{GitHub/Code-gen-for-robot-arm-OJT-FALL-2025-FPT}
+This report presents the outcome of our internship project of our team, who worked on a project entitled \textbf{Code Generation with Large Language Models for Robot Arms Applications.} 
+The work focuses on applying large language models (LLMs) to automatically generate and adapt control code for industrial robot arms. Throughout the project, the team implemented a system that integrates LLM-based code generation, task-specific prompt design, and real-time code validation for robotic motion control. The report discusses the design process, implementation details, encountered challenges, and experimental evaluations of the proposed approach. Results demonstrate that LLMs can significantly accelerate robot programming workflows while maintaining adaptability to various robot configurations. The source code and implementation details are publicly available at: \href{https://github.com/Minhtrna/Code-gen-for-robot-arm-OJT-FALL-2025-FPT}{GitHub/Code-gen-for-robot-arm-OJT-FALL-2025-FPT}
 \end{abstract}
+
 
 \section{Introduction}
 The rapid advancement of artificial intelligence (AI) and machine learning has led to the development of vision language models (VLMs) that can understand and generate human-like text. These models have shown remarkable capabilities in various natural language processing tasks, including code generation. The ability to generate code automatically has significant implications for the software development industry, particularly in specialized fields such as robotics.
@@ -70,13 +71,13 @@ We designed a modular system architecture to facilitate the integration of vario
 The architecture consists of the following modules:
 \begin{itemize}
     \item \textbf{GUI Module:} This module is responsible for user interaction. It allows users to input task specifications, view visual data from the Mech-EYE or Intel Realsense cameras, and monitor the code generation process.
-    user can also select the VLM they want to use for code generation, do work with camera like calibration, capturing image, point cloud, etc.
+    user can also select the LLM they want to use for code generation, do work with camera like calibration, capturing image, point cloud, etc.
     \item \textbf{Logic Core Module:} This module manages the communication with the various system components, ensuring smooth data flow and coordination between modules. It also handles all Logic task like communication with hardwares, processing user inputs, data, etc.
-    \item \textbf{VLM and Vision Integration Module:} This module interfaces with the selected vision language models and vision models. It handles the input of visual data and task specifications, and it retrieves the generated code from the models. 
+    \item \textbf{LLM and Vision Integration Module:} This module interfaces with the selected vision language models and vision models. It handles the input of visual data and task specifications, and it retrieves the generated code from the models. 
     \item \textbf{Simulate and Validate Module:} This module let user simulate and assess the performance of the generated code based on predefined metrics such as accuracy, efficiency, and robustness. It provides feedback for further refinement of the VLMs generated code and the overall system.
 \end{itemize}   
 
-\subsection{Vision Language Models}
+\subsection{Large Language Models for Code Generation}
 
 Robotic team is responsible for the integration and fine-tuning of the vision language models (VLMs) used for code generation. They ensure that the selected VLMs are properly configured to handle the specific requirements of robot arm applications.
 The team also works on optimizing the performance of the VLMs by fine-tuning them on relevant datasets and adjusting hyperparameters to improve code generation accuracy.
@@ -142,12 +143,10 @@ Model was modified by added \textbf{SSD(Single Shot MultiBox Detector)} head on 
 
 \section{Conclusion}
 
-\appendices
-\section{Details of the Code Generation Pipeline}
-DUMP TEXT
+\section{Future Work}
 
-\section{Additional Figures}
-DUMP TEXT
+\section{Acknowledgment}
+Our team would like to express sincere gratitude to \textbf{VietDynamic JSC} for providing the opportunity and resources to carry out this project. We would also like to extend our special thanks to our instructor, \textbf{Mr. Tran Trong Toan}, for his dedicated guidance, valuable feedback, and continuous support throughout the internship. His expertise and encouragement were essential in shaping our understanding and successful application of large language models in robotics.
 
 \bibliographystyle{IEEEtran}
 \bibliography{References}
