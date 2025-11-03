@@ -90,7 +90,7 @@ Though the model come with self contained vision capabilities, a dedicated local
 
 \subsection{Vision Models}
 
-Camera team is responsible for the integration and calibration of the Mech-EYE and Intel Realsense cameras. 
+Camera team is responsible for the integration and calibration of the Intel Realsense cameras. 
 They ensure that the visual data captured by these cameras is accurately processed and made available for the VLMs.
 Camera team also works on optimizing the camera settings to enhance image quality and depth perception, which are crucial for effective code generation.
 The main tasks of camera team is to develop a custom Vision model that can accurately detect and recognize objects in the robot's environment and provide relevant visual information to support the VLMs process.
@@ -123,16 +123,24 @@ Model was modified by added \textbf{SSD(Single Shot MultiBox Detector)} head on 
 
 \subsection{Validation and Simulation}
 
-To validate the generated code, we implemented a  built-in Inverse Kinematics (IK) solver to simulate basic robot's movements.
-Application support various robot models, including popular industrial robot arms like ABB, AUBO and others models in future. while build-in simulator allows user to test environment setup and robot's movements it lack of advanced physics simulation which is crucial for realistic movement and interaction validation.
-Ros and Gazebo provide a more comprehensive simulation environment with accurate physics modeling, allowing us to validate the generated code in a realistic setting. We integrated our application with ROS and Gazebo and allow seamless workflow between code generation and simulation validation.
-This setup allows us to test the functionality and performance of the generated code without the need for physical hardware.
+The application includes a built-in \textit{Inverse Kinematics} (IK) solver based on the 
+\textbf{Levenberg-Marquardt (LM)} algorithm with \textit{numerical Jacobian} computation.  
+This solver enables real-time simulation of basic robot arm movements for popular industrial 
+models such as ABB, AUBO, and others.  
+While the built-in simulator supports rapid environment setup and motion testing, 
+it lacks advanced physics simulation essential for realistic interaction and dynamics validation.  
+To address this, the system is integrated with \textbf{ROS} and \textbf{Gazebo}, 
+providing a comprehensive physics-based simulation environment.  
+This seamless workflow enables thorough validation of the generated IK code
 \begin{figure}[ht]
   \centering
   \includegraphics[width=.97\columnwidth]{Sim.png}
   \caption{Built-in simulation environment for testing robot movements.}
   \label{fig:simulation-environment}
 \end{figure}
+
+
+
 
 
 \section{Results and Discussion}

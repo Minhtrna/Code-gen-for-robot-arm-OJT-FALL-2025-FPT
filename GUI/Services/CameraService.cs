@@ -1,164 +1,458 @@
 using System;
-using System.Runtime.InteropServices;
-using System.Windows.Media.Imaging;
-using System.Windows.Media;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
+using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows.Media.Imaging;
+using System.Windows.Threading;
+using OpenCvSharp;
+using OpenCvSharp.WpfExtensions;
 
 namespace GUI.Services
 {
-    public class CameraService : IDisposable
+    public class CameraInfo
     {
-        // Change DLL name to match the new one
-        private const string DLL_NAME = "DeviceInterface.dll";
+        public int Index { get; set; }
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public bool IsConnected { get; set; }
+    }
 
-        // Use DeviceInterface.dll functions instead
-        [DllImport(DLL_NAME, CallingConvention = CallingConvention.Cdecl)]
-        private static extern int DiscoverWebcams();
+    public class CameraService : INotifyPropertyChanged, IDisposable
+    {
+        private VideoCapture _capture;
+        private bool _isCapturing;
+        private bool _isDisposed;
+        private Mat _currentFrame;
+        private readonly object _frameLock = new object();
+        private Dispatcher _uiDispatcher;
+        private Task _captureTask;
+        private CancellationTokenSource _captureCts;
 
-        [DllImport(DLL_NAME, CallingConvention = CallingConvention.Cdecl)]
-        private static extern bool ConnectWebcam(int index);
+        // Properties for binding
+        private BitmapSource _currentBitmap;
+        private string _cameraStatus = "Disconnected";
+        private string _resolution = "N/A";
+        private bool _isCameraConnected;
 
-        [DllImport(DLL_NAME, CallingConvention = CallingConvention.Cdecl)]
-        private static extern bool DisconnectWebcam();
+        public BitmapSource CurrentBitmap
+        {
+            get => _currentBitmap;
+            private set
+            {
+                _currentBitmap = value;
+                OnPropertyChanged();
+            }
+        }
 
-        [DllImport(DLL_NAME, CallingConvention = CallingConvention.Cdecl)]
-        private static extern bool IsWebcamConnected();
+        public string CameraStatus
+        {
+            get => _cameraStatus;
+            private set
+            {
+                _cameraStatus = value;
+                OnPropertyChanged();
+            }
+        }
 
-        [DllImport(DLL_NAME, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
-        private static extern bool CaptureWebcamImage([MarshalAs(UnmanagedType.LPStr)] string filename);
+        public string Resolution
+        {
+            get => _resolution;
+            private set
+            {
+                _resolution = value;
+                OnPropertyChanged();
+            }
+        }
 
-        [DllImport(DLL_NAME, CallingConvention = CallingConvention.Cdecl)]
-        private static extern void CleanupDevices();
+        public bool IsCameraConnected
+        {
+            get => _isCameraConnected;
+            private set
+            {
+                _isCameraConnected = value;
+                OnPropertyChanged();
+            }
+        }
 
-        private bool _isDisposed = false;
-        private bool _isInitialized = false;
+        public CameraService()
+        {
+            _uiDispatcher = Dispatcher.CurrentDispatcher;
+        }
 
-        public bool IsInitialized => _isInitialized;
+        public List<CameraInfo> GetAvailableCameras()
+        {
+            var cameras = new List<CameraInfo>();
 
-        public bool Initialize(int deviceId = 0)
+            try
+            {
+                for (int i = 0; i < 10; i++)
+                {
+                    try
+                    {
+                        using (var testCapture = new VideoCapture(i))
+                        {
+                            if (testCapture.IsOpened())
+                            {
+                                cameras.Add(new CameraInfo
+                                {
+                                    Index = i,
+                                    Name = $"Camera {i}",
+                                    Description = $"USB Camera Device {i}",
+                                    IsConnected = false
+                                });
+                                testCapture.Release();
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        // Camera not available at this index
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error getting cameras: {ex.Message}");
+            }
+
+            return cameras;
+        }
+
+        public bool ConnectCamera(int cameraIndex)
         {
             try
             {
-                int webcamCount = DiscoverWebcams();
-                if (webcamCount > deviceId)
+                DisconnectCamera();
+
+                // Use DirectShow backend for better performance on Windows
+                _capture = new VideoCapture(cameraIndex, VideoCaptureAPIs.DSHOW);
+
+                if (!_capture.IsOpened())
                 {
-                    bool success = ConnectWebcam(deviceId);
-                    _isInitialized = success;
-                    return success;
+                    _capture?.Dispose();
+                    _capture = null;
+                    return false;
                 }
+
+                // Reset all camera settings to AUTO mode (clear any manual settings)
+                try
+                {
+                    // Enable all auto modes to clear manual settings
+                    _capture.Set(VideoCaptureProperties.AutoExposure, 0.75); // Auto exposure ON
+                    _capture.Set(VideoCaptureProperties.AutoWB, 1); // Auto white balance
+
+                    System.Diagnostics.Debug.WriteLine("Camera settings cleared - all auto modes enabled");
+                }
+                catch (Exception resetEx)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Note: Some auto settings not supported: {resetEx.Message}");
+                    // This is OK - not all cameras support all auto modes
+                }
+
+                // Get camera's natural resolution
+                int width = (int)_capture.Get(VideoCaptureProperties.FrameWidth);
+                int height = (int)_capture.Get(VideoCaptureProperties.FrameHeight);
+
+                Resolution = $"{width}x{height}";
+
+                IsCameraConnected = true;
+                CameraStatus = $"Connected - Camera {cameraIndex}";
+
+                System.Diagnostics.Debug.WriteLine($"Camera connected: {width}x{height}");
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                CameraStatus = $"Connection failed: {ex.Message}";
+                System.Diagnostics.Debug.WriteLine($"Camera connection error: {ex.Message}");
                 return false;
             }
-            catch (DllNotFoundException)
-            {
-                throw new InvalidOperationException($"{DLL_NAME} not found. Make sure the DLL is in the application directory.");
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException($"Failed to initialize camera: {ex.Message}", ex);
-            }
         }
 
-        public int GetAvailableCameraCount()
+        public bool SetResolution(int width, int height)
         {
-            try
-            {
-                return DiscoverWebcams();
-            }
-            catch
-            {
-                return 0;
-            }
-        }
-
-        public BitmapSource CaptureFrameAsBitmap()
-        {
-            if (!IsInitialized)
-                throw new InvalidOperationException("Camera not initialized");
+            if (_capture == null || !_capture.IsOpened())
+                return false;
 
             try
             {
-                // For now, capture to temp file and load as bitmap
-                string tempFile = Path.GetTempFileName() + ".png";
-
-                if (CaptureWebcamImage(tempFile))
+                // Lock to prevent race condition with capture loop
+                lock (_frameLock)
                 {
-                    // Load the saved image as BitmapSource
-                    BitmapImage bitmap = new BitmapImage();
-                    bitmap.BeginInit();
-                    bitmap.UriSource = new Uri(tempFile);
-                    bitmap.EndInit();
+                    _capture.Set(VideoCaptureProperties.FrameWidth, width);
+                    _capture.Set(VideoCaptureProperties.FrameHeight, height);
 
-                    // Clean up temp file
-                    try { File.Delete(tempFile); } catch { }
+                    // Get actual resolution (camera may not support requested resolution)
+                    int actualWidth = (int)_capture.Get(VideoCaptureProperties.FrameWidth);
+                    int actualHeight = (int)_capture.Get(VideoCaptureProperties.FrameHeight);
 
-                    return bitmap;
+                    Resolution = $"{actualWidth}x{actualHeight}";
+
+                    System.Diagnostics.Debug.WriteLine($"Resolution changed to: {actualWidth}x{actualHeight}");
                 }
 
-                return null;
+                return true;
             }
             catch (Exception ex)
             {
-                throw new InvalidOperationException($"Failed to capture frame: {ex.Message}", ex);
+                System.Diagnostics.Debug.WriteLine($"Resolution change error: {ex.Message}");
+                return false;
             }
         }
 
-        public bool SaveFrameToFile(string filename)
+        public void DisconnectCamera()
         {
-            if (!IsInitialized)
-                throw new InvalidOperationException("Camera not initialized");
+            StopCapture();
 
             try
             {
-                return CaptureWebcamImage(filename);
+                if (_capture != null)
+                {
+                    lock (_frameLock)
+                    {
+                        _capture.Release();
+                        _capture.Dispose();
+                        _capture = null;
+                    }
+                }
             }
             catch (Exception ex)
             {
-                throw new InvalidOperationException($"Failed to save frame: {ex.Message}", ex);
+                System.Diagnostics.Debug.WriteLine($"Camera disconnect error: {ex.Message}");
+            }
+
+            IsCameraConnected = false;
+            CameraStatus = "Disconnected";
+            Resolution = "N/A";
+            CurrentBitmap = null;
+        }
+
+        public void StartCapture()
+        {
+            if (_capture == null || !_capture.IsOpened() || _isCapturing)
+                return;
+
+            _isCapturing = true;
+            CameraStatus = "Streaming...";
+
+            // Create cancellation token for stopping the capture loop
+            _captureCts = new CancellationTokenSource();
+
+            // Start continuous capture loop on background thread
+            _captureTask = Task.Run(() => CaptureLoop(_captureCts.Token), _captureCts.Token);
+        }
+
+        public void StopCapture()
+        {
+            _isCapturing = false;
+
+            // Cancel the capture loop
+            _captureCts?.Cancel();
+
+            // Wait for capture task to complete
+            try
+            {
+                _captureTask?.Wait(1000); // Wait max 1 second
+            }
+            catch (AggregateException)
+            {
+                // Task was cancelled, this is expected
+            }
+
+            _captureCts?.Dispose();
+            _captureCts = null;
+            _captureTask = null;
+
+            if (IsCameraConnected)
+            {
+                CameraStatus = "Connected - Stopped";
             }
         }
 
-        public void Release()
+        private void CaptureLoop(CancellationToken cancellationToken)
         {
-            if (!_isDisposed && _isInitialized)
+            System.Diagnostics.Debug.WriteLine("Capture loop started");
+
+            while (!cancellationToken.IsCancellationRequested && _isCapturing)
             {
                 try
                 {
-                    DisconnectWebcam();
-                    _isInitialized = false;
+                    Mat frame = new Mat();
+
+                    // Read frame with lock to prevent conflicts with resolution changes
+                    bool readSuccess;
+                    lock (_frameLock)
+                    {
+                        if (_capture == null || !_capture.IsOpened())
+                            break;
+
+                        readSuccess = _capture.Read(frame);
+                    }
+
+                    if (!readSuccess || frame.Empty())
+                    {
+                        frame?.Dispose();
+                        continue;
+                    }
+
+                    // Store current frame for capture operations
+                    lock (_frameLock)
+                    {
+                        _currentFrame?.Dispose();
+                        _currentFrame = frame.Clone();
+                    }
+
+                    // Convert to BitmapSource on UI thread
+                    if (_uiDispatcher != null && !_isDisposed)
+                    {
+                        _uiDispatcher.BeginInvoke(new Action(() =>
+                        {
+                            try
+                            {
+                                if (!_isDisposed && frame != null && !frame.Empty())
+                                {
+                                    var bitmap = frame.ToBitmapSource();
+
+                                    if (bitmap != null && !bitmap.IsFrozen)
+                                    {
+                                        bitmap.Freeze();
+                                    }
+
+                                    CurrentBitmap = bitmap;
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                System.Diagnostics.Debug.WriteLine($"Bitmap conversion error: {ex.Message}");
+                            }
+                            finally
+                            {
+                                frame?.Dispose();
+                            }
+                        }), DispatcherPriority.Render);
+                    }
+                    else
+                    {
+                        frame?.Dispose();
+                    }
+
+                    // Small delay to prevent CPU overload (approximately 30 fps)
+                    Thread.Sleep(33);
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // Ignore exceptions during cleanup
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Frame capture error: {ex.Message}");
+                    }
                 }
+            }
+
+            System.Diagnostics.Debug.WriteLine("Capture loop stopped");
+        }
+
+        public bool CaptureImage(string filePath)
+        {
+            if (!_isCapturing || _currentFrame == null)
+                return false;
+
+            try
+            {
+                lock (_frameLock)
+                {
+                    if (_currentFrame != null && !_currentFrame.Empty())
+                    {
+                        return _currentFrame.SaveImage(filePath);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Image capture error: {ex.Message}");
+            }
+
+            return false;
+        }
+
+        public BitmapSource CaptureImageAsBitmap()
+        {
+            if (!_isCapturing || _currentFrame == null)
+                return null;
+
+            try
+            {
+                Mat frameCopy;
+                lock (_frameLock)
+                {
+                    if (_currentFrame == null || _currentFrame.Empty())
+                        return null;
+
+                    frameCopy = _currentFrame.Clone();
+                }
+
+                BitmapSource bitmap = null;
+                if (_uiDispatcher != null)
+                {
+                    _uiDispatcher.Invoke(() =>
+                    {
+                        try
+                        {
+                            bitmap = frameCopy.ToBitmapSource();
+                            if (bitmap != null && !bitmap.IsFrozen)
+                            {
+                                bitmap.Freeze();
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"Bitmap capture error: {ex.Message}");
+                        }
+                        finally
+                        {
+                            frameCopy.Dispose();
+                        }
+                    });
+                }
+                else
+                {
+                    frameCopy.Dispose();
+                }
+
+                return bitmap;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Bitmap capture error: {ex.Message}");
+                return null;
             }
         }
 
         public void Dispose()
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
+            if (_isDisposed)
+                return;
 
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!_isDisposed)
+            _isDisposed = true;
+
+            StopCapture();
+            DisconnectCamera();
+
+            lock (_frameLock)
             {
-                Release();
-                try
-                {
-                    CleanupDevices();
-                }
-                catch
-                {
-                    // Ignore cleanup errors
-                }
-                _isDisposed = true;
+                _currentFrame?.Dispose();
+                _currentFrame = null;
             }
         }
 
-        ~CameraService()
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
-            Dispose(false);
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
-}   
+}

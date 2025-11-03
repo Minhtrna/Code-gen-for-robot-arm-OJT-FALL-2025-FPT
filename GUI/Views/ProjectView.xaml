@@ -8,26 +8,26 @@
     
     <Grid Margin="10">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="1*"/>  <!-- Left Column: Live View + AI Chat -->
+            <ColumnDefinition Width="1*"/>  <!-- Left Column: Image View + AI Chat -->
             <ColumnDefinition Width="2*"/>  <!-- Right Column: Code Output + Controls -->
         </Grid.ColumnDefinitions>
         
-        <!-- ===== LEFT COLUMN: Live View + AI Input ===== -->
+        <!-- ===== LEFT COLUMN: Image View + AI Input ===== -->
         <Grid Grid.Column="0" Margin="0,0,10,0">
             <Grid.RowDefinitions>
-                <RowDefinition Height="2*"/>  <!-- Live View (larger) -->
+                <RowDefinition Height="2*"/>  <!-- Image View (larger) -->
                 <RowDefinition Height="1*"/>  <!-- AI Chat (smaller) -->
             </Grid.RowDefinitions>
             
-            <!-- Live Camera View -->
-            <GroupBox Grid.Row="0" Header="Live Camera View" Margin="0,0,0,5">
+            <!-- Image Analysis View -->
+            <GroupBox Grid.Row="0" Header="Image Analysis" Margin="0,0,0,5">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
                     
-                    <!-- Camera Display -->
+                    <!-- Image Display -->
                     <Border Grid.Row="0" Background="Black" BorderBrush="Gray" BorderThickness="1" Margin="5">
                         <Grid>
                             <Image Name="LiveViewImage" Source="{Binding LiveViewSource}" 
@@ -45,12 +45,12 @@
                                         </Style.Triggers>
                                     </Style>
                                 </StackPanel.Style>
-                                <TextBlock Text="📷" FontSize="48" Foreground="Gray" 
+                                <TextBlock Text="🖼️" FontSize="48" Foreground="Gray" 
                                           HorizontalAlignment="Center" Margin="0,0,0,10"/>
-                                <TextBlock Text="No Image Captured" 
+                                <TextBlock Text="No Image Loaded" 
                                           HorizontalAlignment="Center" 
                                           Foreground="Gray" FontSize="14"/>
-                                <TextBlock Text="Click 'Capture' to take a photo" 
+                                <TextBlock Text="Click 'Load Image' to select a file" 
                                           HorizontalAlignment="Center" 
                                           Foreground="Gray" FontSize="12" Margin="0,5,0,0"/>
                             </StackPanel>
@@ -58,20 +58,19 @@
                             <!-- Status Overlay -->
                             <Border Background="#AA000000" HorizontalAlignment="Left" VerticalAlignment="Bottom" 
                                    Margin="10" Padding="5">
-                                <TextBlock Text="{Binding ConnectedDevice}" 
+                                <TextBlock Text="Image Analysis Mode" 
                                           Foreground="White" FontSize="12"/>
                             </Border>
                         </Grid>
                     </Border>
                     
-                    <!-- Quick Controls -->
+                    <!-- Image Controls -->
                     <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="5">
-                        <!-- Capture Button - enabled when device connected -->
-                        <Button Content="📷 Capture" Margin="0,0,5,0" Padding="8,4"
-                                Command="{Binding CaptureImageCommand}"
-                                IsEnabled="{Binding HasLiveView}"/>
+                        <!-- Load Image Button -->
+                        <Button Content="📁 Load Image" Margin="0,0,5,0" Padding="8,4"
+                                Command="{Binding LoadImageCommand}"/>
                         
-                        <!-- Save Button - enabled when image captured -->
+                        <!-- Save Button - enabled when image loaded -->
                         <Button Content="💾 Save" Margin="0,0,5,0" Padding="8,4"
                                 Command="{Binding SaveImageCommand}">
                             <Button.Style>
@@ -86,7 +85,7 @@
                             </Button.Style>
                         </Button>
                         
-                        <!-- Analyze Button - enabled when image captured -->
+                        <!-- Analyze Button - enabled when image loaded -->
                         <Button Content="🔍 Analyze" Padding="8,4"
                                 Command="{Binding AnalyzeImageCommand}">
                             <Button.Style>
@@ -303,7 +302,7 @@
                                                   HorizontalAlignment="Center" Margin="0,0,0,10"/>
                                         <TextBlock Text="No analysis results yet" FontSize="14" Foreground="Gray"
                                                   HorizontalAlignment="Center"/>
-                                        <TextBlock Text="Capture and analyze an image to see results" 
+                                        <TextBlock Text="Load and analyze an image to see results" 
                                                   FontSize="12" Foreground="Gray" HorizontalAlignment="Center"/>
                                     </StackPanel>
                                 </Border>

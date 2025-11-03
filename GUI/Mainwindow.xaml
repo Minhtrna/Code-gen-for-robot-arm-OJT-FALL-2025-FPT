@@ -7,11 +7,6 @@
 
     <Grid>
         <TabControl>
-            <!-- Device Tab -->
-            <TabItem Header="Device" FontSize="14" Padding="10,5">
-                <views:DeviceView/>
-            </TabItem>
-            
             <!-- Project Tab -->
             <TabItem Header="Project" FontSize="14" Padding="10,5">
                 <views:ProjectView/>

@@ -17,36 +17,16 @@
 
 	<ItemGroup>
 		<PackageReference Include="HelixToolkit.Wpf" Version="2.27.3" />
+		<PackageReference Include="MathNet.Numerics" Version="5.0.0" />
+		<PackageReference Include="OpenCvSharp4" Version="4.11.0.20250507" />
+		<PackageReference Include="OpenCvSharp4.runtime.win" Version="4.11.0.20250507" />
+		<PackageReference Include="OpenCvSharp4.WpfExtensions" Version="4.11.0.20250507" />
 	</ItemGroup>
 
-	<!-- Enhanced DLL copy with debugging -->
-	<Target Name="CopyNativeDlls" BeforeTargets="Build">
-		<PropertyGroup>
-			<CppBuildDir>$(MSBuildProjectDirectory)\..\Core\CAM\Hardware\out\build\x64-Debug\bin\Debug</CppBuildDir>
-		</PropertyGroup>
-
-		<Message Text="Looking for DLLs in: $(CppBuildDir)" Importance="high" />
-
-		<ItemGroup>
-			<AllNativeDlls Include="$(CppBuildDir)\*.dll" />
-		</ItemGroup>
-
-		<Message Text="Found @(AllNativeDlls-&gt;Count()) DLL(s) to copy" Importance="high" />
-		<Message Text="Source DLLs: %(AllNativeDlls.Filename)%(AllNativeDlls.Extension)" Importance="normal" />
-
-		<!-- Force copy DeviceInterface.dll if it exists -->
-		<Copy SourceFiles="@(AllNativeDlls)" DestinationFolder="$(OutputPath)" ContinueOnError="true" SkipUnchangedFiles="true" OverwriteReadOnlyFiles="true" Condition="@(AllNativeDlls-&gt;Count()) &gt; 0" />
-
-		<Message Text="DLL copy completed to: $(OutputPath)" Importance="high" />
-	</Target>
-
-	<!-- Enhanced verification -->
-	<Target Name="VerifyDlls" AfterTargets="Build">
-		<ItemGroup>
-			<DllFiles Include="$(OutputPath)*.dll" />
-		</ItemGroup>
-		<Message Text="DLLs in output folder: %(DllFiles.Filename)%(DllFiles.Extension)" Importance="high" />
-		<Message Text="Total DLLs available: @(DllFiles-&gt;Count())" Importance="high" />
-	</Target>
+	<ItemGroup>
+	  <Reference Include="Intel.RealSensed">
+	    <HintPath>Libs\Intel.RealSensed.dll</HintPath>
+	  </Reference>
+	</ItemGroup>
 
 </Project>

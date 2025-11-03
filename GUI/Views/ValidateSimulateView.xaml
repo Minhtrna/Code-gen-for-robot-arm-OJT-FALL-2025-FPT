@@ -3,7 +3,6 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:h="http://helix-toolkit.org/wpf">
 
-
 	<UserControl.Resources>
 		<BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
 	</UserControl.Resources>
@@ -31,20 +30,20 @@
 
 				<!-- Speed Control -->
 				<TextBlock Text="Speed:" VerticalAlignment="Center" Margin="0,0,5,0"/>
-				<Slider Width="100" Minimum="0.1" Maximum="5.0" Value="{Binding SimulationSpeed}"
+				<Slider Width="100" Minimum="0.1" Maximum="5" Value="{Binding SimulationSpeed}"
                         TickFrequency="0.5" VerticalAlignment="Center"/>
 				<TextBlock Text="{Binding SimulationSpeed, StringFormat='{}{0:F1}x'}"
-                          VerticalAlignment="Center" Margin="5,0,0,0"/>
+                           VerticalAlignment="Center" Margin="5,0,0,0"/>
 
 				<!-- Time Controls -->
 				<StackPanel Orientation="Horizontal" Margin="20,0,0,0">
 					<TextBlock Text="{Binding CurrentTime, StringFormat='Current: {0:F1}s'}"
-                        VerticalAlignment="Center" Margin="0,0,20,0"/>
+                               VerticalAlignment="Center" Margin="0,0,20,0"/>
 					<TextBlock Text="{Binding TotalTime, StringFormat='Total: {0:F1}s'}"
-                        VerticalAlignment="Center" Margin="0,0,20,0"/>
+                               VerticalAlignment="Center" Margin="0,0,20,0"/>
 					<TextBlock Text="Time Line" VerticalAlignment="Center" Margin="0,0,5,0"/>
 					<Slider Width="200" Minimum="0" Maximum="{Binding TotalTime}"
-                        Value="{Binding CurrentTime}" TickFrequency="1"/>
+                            Value="{Binding CurrentTime}" TickFrequency="1"/>
 				</StackPanel>
 			</StackPanel>
 		</Border>
@@ -60,162 +59,102 @@
 
 			<!-- ===== LEFT COLUMN: Simulation View ===== -->
 			<GroupBox Grid.Column="0" Header="Preview" Margin="0,0,10,0">
-				<Grid>
-					<Grid.RowDefinitions>
-						<RowDefinition Height="*"/>
-						<RowDefinition Height="Auto"/>
-					</Grid.RowDefinitions>
+				<Border Background="Black" BorderBrush="Gray" BorderThickness="2" Margin="5">
+					<Grid>
+						<h:HelixViewport3D
+                            Name="SimulationViewport"
+                            ShowCoordinateSystem="True"
+                            ShowViewCube="True"
+                            ZoomExtentsWhenLoaded="True">
 
-					<Border Grid.Row="0" Background="Black" BorderBrush="Gray" BorderThickness="2" Margin="5">
-						<Grid>
-							<h:HelixViewport3D
-                                Name="SimulationViewport"
-                                ShowCoordinateSystem="True"
-                                ShowViewCube="True"
-                                ZoomExtentsWhenLoaded="True">
+							<!-- Background -->
+							<h:HelixViewport3D.Background>
+								<LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
+									<GradientStop Color="#FF060A13" Offset="0"/>
+									<GradientStop Color="#FF1D64FF" Offset="1"/>
+								</LinearGradientBrush>
+							</h:HelixViewport3D.Background>
 
-								<!-- Background -->
-								<h:HelixViewport3D.Background>
-									<LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
-										<GradientStop Color="#FF060A13" Offset="0"/>
-										<GradientStop Color="#FF1D64FF" Offset="1"/>
-									</LinearGradientBrush>
-								</h:HelixViewport3D.Background>
+							<!-- Camera -->
+							<h:HelixViewport3D.Camera>
+								<PerspectiveCamera
+                                    Position="-1571, 4801, 3774"
+                                    LookDirection="2038, -5200, -2930"
+                                    UpDirection="-0.145, 0.372, 0.917"
+                                    FieldOfView="45"/>
+							</h:HelixViewport3D.Camera>
 
-								<!-- Camera -->
-								<h:HelixViewport3D.Camera>
-									<PerspectiveCamera
-                                        Position="-1571, 4801, 3774"
-                                        LookDirection="2038, -5200, -2930"
-                                        UpDirection="-0.145, 0.372, 0.917"
-                                        FieldOfView="45"/>
-								</h:HelixViewport3D.Camera>
+							<!-- Lighting -->
+							<h:DefaultLights/>
 
-								<!-- Lighting -->
-								<h:DefaultLights/>
+							<!-- Grid plane -->
+							<h:GridLinesVisual3D
+                                Width="16000"
+                                Length="16000"
+                                MinorDistance="100"
+                                MajorDistance="400"
+                                Thickness="1.5"
+                                Fill="#55CFCECE"/>
 
-								<!-- Grid plane -->
-								<h:GridLinesVisual3D
-                                    Width="16000"
-                                    Length="16000"
-                                    MinorDistance="100"
-                                    MajorDistance="400"
-                                    Thickness="1.5"
-                                    Fill="#55CFCECE"/>
+							<!-- ROBOT MODEL - Binding to ViewModel -->
+							<ModelVisual3D>
+								<ModelVisual3D.Content>
+									<Binding Path="RobotModel3D"/>
+								</ModelVisual3D.Content>
+							</ModelVisual3D>
 
-								<!-- ROBOT MODEL - Binding to ViewModel -->
-								<ModelVisual3D>
-									<ModelVisual3D.Content>
-										<Binding Path="RobotModel3D"/>
-									</ModelVisual3D.Content>
-								</ModelVisual3D>
+							<!-- Target Position Sphere -->
+							<h:SphereVisual3D
+                                Center="{Binding TargetPositionPoint}"
+                                Radius="50"
+                                Fill="Red"
+                                Visible="True"/>
+						</h:HelixViewport3D>
 
-								<!-- Target Position Sphere -->
-								<h:SphereVisual3D
-                                    Center="{Binding TargetPositionPoint}"
-                                    Radius="50"
-                                    Fill="Red"
-                                    Visible="True"/>
-								
-
-							</h:HelixViewport3D>
-
-							<!-- View Controls Overlay -->
-							<StackPanel HorizontalAlignment="Right" VerticalAlignment="Top"
-                                       Background="#AA000000" Margin="0">
-								<Border Padding="5">
-									<StackPanel Orientation="Horizontal">
-										<Button Content="🏠" ToolTip="Home View" Padding="5" Margin="2"
-                                                Command="{Binding HomeViewCommand}"/>
-										<Button Content="🔄" ToolTip="Reset View" Padding="5" Margin="2"
-                                                Command="{Binding ResetViewCommand}"/>
-										<Button Content="🔍+" ToolTip="Zoom Extents" Padding="5" Margin="2"
-                                                Click="ZoomExtents_Click"/>
-									</StackPanel>
-								</Border>
-							</StackPanel>
-
-							<!-- Status Overlay -->
-							<StackPanel HorizontalAlignment="Left" VerticalAlignment="Top"
-                                       Background="#AA000000" Margin="10">
-								<Border Padding="8">
-									<StackPanel>
-										<TextBlock Text="{Binding CurrentPosition}"
-                                                 Foreground="White" FontSize="11" FontFamily="Consolas"/>
-										<TextBlock Text="{Binding CurrentSpeed, StringFormat='Speed: {0}'}"
-                                                 Foreground="White" FontSize="11" FontFamily="Consolas"/>
-										<TextBlock Text="{Binding SimulationStatus, StringFormat='Status: {0}'}"
-                                                 Foreground="White" FontSize="11" FontFamily="Consolas"/>
-										<TextBlock Text="{Binding DistanceToTarget, StringFormat='Distance: {0:F1}mm'}"
-                                                 Foreground="#FFFFFF00" FontSize="11" FontFamily="Consolas"/>
-									</StackPanel>
-								</Border>
-							</StackPanel>
-						</Grid>
-					</Border>
-
-					<!-- Joint Controls -->
-					<GroupBox Grid.Row="1" Header="Manual Joint Control" Margin="5">
-						<StackPanel>
-							<!-- Joint Controls -->
-							<ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
-								<ItemsControl ItemsSource="{Binding JointControls}">
-									<ItemsControl.ItemsPanel>
-										<ItemsPanelTemplate>
-											<StackPanel Orientation="Horizontal"/>
-										</ItemsPanelTemplate>
-									</ItemsControl.ItemsPanel>
-									<ItemsControl.ItemTemplate>
-										<DataTemplate>
-											<Border BorderBrush="LightGray" BorderThickness="1"
-													Margin="5" Padding="10" Background="White" Width="100">
-												<StackPanel>
-													<TextBlock Text="{Binding Name}" FontWeight="Bold"
-															   HorizontalAlignment="Center" Margin="0,0,0,5"/>
-													<Slider Orientation="Vertical" Height="80"
-															Minimum="{Binding MinValue}"
-															Maximum="{Binding MaxValue}"
-															Value="{Binding CurrentValue, Mode=TwoWay}"
-															TickFrequency="10"/>
-													<TextBlock Text="{Binding CurrentValue, StringFormat='{}{0:F0}°'}"
-															   HorizontalAlignment="Center" FontSize="10"/>
-												</StackPanel>
-											</Border>
-										</DataTemplate>
-									</ItemsControl.ItemTemplate>
-								</ItemsControl>
-							</ScrollViewer>
-
-							<!-- Divider line (optional, just for clarity) -->
-							<Separator Margin="0,8"/>
-
-							<!-- Target Position Controls -->
-							<StackPanel Orientation="Horizontal" Margin="10,0,10,0" HorizontalAlignment="Center">
-								<StackPanel Margin="0,0,15,0">
-									<TextBlock Text="Target X:" FontWeight="Bold"/>
-									<TextBox Text="{Binding TargetX, UpdateSourceTrigger=PropertyChanged}"
-											 Width="80" Margin="0,2"/>
+						<!-- View Controls Overlay -->
+						<StackPanel HorizontalAlignment="Right" VerticalAlignment="Top"
+                                    Background="#AA000000" Margin="0">
+							<Border Padding="5">
+								<StackPanel Orientation="Horizontal">
+									<Button Content="🏠" ToolTip="Zoom Extents" Padding="5" Margin="2"
+                                            Click="ZoomExtents_Click"/>
 								</StackPanel>
-								<StackPanel Margin="0,0,15,0">
-									<TextBlock Text="Target Y:" FontWeight="Bold"/>
-									<TextBox Text="{Binding TargetY, UpdateSourceTrigger=PropertyChanged}"
-											 Width="80" Margin="0,2"/>
-								</StackPanel>
-								<StackPanel Margin="0,0,15,0">
-									<TextBlock Text="Target Z:" FontWeight="Bold"/>
-									<TextBox Text="{Binding TargetZ, UpdateSourceTrigger=PropertyChanged}"
-											 Width="80" Margin="0,2"/>
-								</StackPanel>
-							</StackPanel>
+							</Border>
 						</StackPanel>
-					</GroupBox>
-				</Grid>
+
+						<!-- Status Overlay -->
+						<StackPanel HorizontalAlignment="Left" VerticalAlignment="Top"
+                                    Background="#AA000000" Margin="10">
+							<Border Padding="8">
+								<StackPanel>
+									<TextBlock Text="Position:" Foreground="White" FontSize="10"
+                                               FontFamily="Consolas" FontWeight="Bold"/>
+									<TextBlock Text="{Binding CurrentPositionText}"
+                                               Foreground="White" FontSize="11" FontFamily="Consolas"/>
+
+									<TextBlock Text="Orientation:" Foreground="White" FontSize="10"
+                                               FontFamily="Consolas" FontWeight="Bold" Margin="0,5,0,0"/>
+									<TextBlock Text="{Binding CurrentOrientationText}"
+                                               Foreground="White" FontSize="11" FontFamily="Consolas"/>
+
+									<Separator Margin="0,5" Background="#55FFFFFF"/>
+
+									<TextBlock Text="{Binding CurrentSpeed, StringFormat='Speed: {0}'}"
+                                               Foreground="White" FontSize="11" FontFamily="Consolas"/>
+									<TextBlock Text="{Binding SimulationStatus, StringFormat='Status: {0}'}"
+                                               Foreground="White" FontSize="11" FontFamily="Consolas"/>
+									<TextBlock Text="{Binding DistanceToTarget, StringFormat='Distance: {0:F1}mm'}"
+                                               Foreground="#FFFFFF00" FontSize="11" FontFamily="Consolas"/>
+								</StackPanel>
+							</Border>
+						</StackPanel>
+					</Grid>
+				</Border>
 			</GroupBox>
 
 			<!-- ===== RIGHT COLUMN: Validation Panel ===== -->
 			<Grid Grid.Column="1" Margin="10,0,0,0">
 				<Grid.RowDefinitions>
-					<RowDefinition Height="Auto"/>
 					<RowDefinition Height="Auto"/>
 					<RowDefinition Height="*"/>
 				</Grid.RowDefinitions>
@@ -224,8 +163,8 @@
 				<GroupBox Grid.Row="0" Header="Validation Setting" Margin="0,0,0,10">
 					<StackPanel Margin="10" HorizontalAlignment="Left">
 						<ComboBox Width="150" Margin="0,0,0,5"
-                              ItemsSource="{Binding RobotModel}"
-                              SelectedItem="{Binding SelectedRobotModel}"/>
+                                  ItemsSource="{Binding RobotModel}"
+                                  SelectedItem="{Binding SelectedRobotModel}"/>
 						<StackPanel Orientation="Horizontal" Margin="0,5">
 							<TextBlock Text="Errors: " FontWeight="Bold"/>
 							<TextBlock Text="{Binding ErrorCount}" Foreground="Red"/>
@@ -238,6 +177,82 @@
 				<!-- Validation Results -->
 				<GroupBox Grid.Row="1" Header="Validation Results">
 					<TabControl>
+						<!-- Joint Controls Tab -->
+						<TabItem Header="🛠️ Joint Controls">
+							<ScrollViewer VerticalScrollBarVisibility="Auto">
+								<StackPanel Margin="10">
+									<!-- Joint Controls -->
+									<ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+										<ItemsControl ItemsSource="{Binding JointControls}">
+											<ItemsControl.ItemsPanel>
+												<ItemsPanelTemplate>
+													<StackPanel Orientation="Horizontal"/>
+												</ItemsPanelTemplate>
+											</ItemsControl.ItemsPanel>
+											<ItemsControl.ItemTemplate>
+												<DataTemplate>
+													<Border BorderBrush="LightGray" BorderThickness="1"
+                                                            Margin="5" Padding="10" Background="White" Width="100">
+														<StackPanel>
+															<TextBlock Text="{Binding Name}" FontWeight="Bold"
+                                                                       HorizontalAlignment="Center" Margin="0,0,0,5"/>
+															<Slider Orientation="Vertical" Height="80"
+                                                                    Minimum="{Binding MinValue}"
+                                                                    Maximum="{Binding MaxValue}"
+                                                                    Value="{Binding CurrentValue, Mode=TwoWay}"
+                                                                    TickFrequency="10"/>
+															<TextBlock Text="{Binding CurrentValue, StringFormat='{}{0:F0}°'}"
+                                                                       HorizontalAlignment="Center" FontSize="10"/>
+														</StackPanel>
+													</Border>
+												</DataTemplate>
+											</ItemsControl.ItemTemplate>
+										</ItemsControl>
+									</ScrollViewer>
+
+									<!-- Divider line -->
+									<Separator Margin="0,8"/>
+
+									<!-- Target Position Controls -->
+									<StackPanel Orientation="Horizontal" Margin="0,0,0,0" HorizontalAlignment="Center">
+										<StackPanel Margin="0,0,15,0">
+											<TextBlock Text="Target X:" FontWeight="Bold"/>
+											<TextBox Text="{Binding TargetX, UpdateSourceTrigger=PropertyChanged}"
+                                                     Width="80" Margin="0,2"/>
+										</StackPanel>
+										<StackPanel Margin="0,0,15,0">
+											<TextBlock Text="Target Y:" FontWeight="Bold"/>
+											<TextBox Text="{Binding TargetY, UpdateSourceTrigger=PropertyChanged}"
+                                                     Width="80" Margin="0,2"/>
+										</StackPanel>
+										<StackPanel Margin="0,0,15,0">
+											<TextBlock Text="Target Z:" FontWeight="Bold"/>
+											<TextBox Text="{Binding TargetZ, UpdateSourceTrigger=PropertyChanged}"
+                                                     Width="80" Margin="0,2"/>
+										</StackPanel>
+									</StackPanel>
+
+									<TextBlock Text="Orientation (degrees)" FontWeight="Bold" Margin="0,5,0,5"/>
+									<StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+										<StackPanel Margin="0,0,10,0">
+											<TextBlock Text="Roll:"/>
+											<TextBox Text="{Binding TargetRoll, UpdateSourceTrigger=PropertyChanged}"
+                                                     Width="70"/>
+										</StackPanel>
+										<StackPanel Margin="0,0,10,0">
+											<TextBlock Text="Pitch:"/>
+											<TextBox Text="{Binding TargetPitch, UpdateSourceTrigger=PropertyChanged}"
+                                                     Width="70"/>
+										</StackPanel>
+										<StackPanel>
+											<TextBlock Text="Yaw:"/>
+											<TextBox Text="{Binding TargetYaw, UpdateSourceTrigger=PropertyChanged}"
+                                                     Width="70"/>
+										</StackPanel>
+									</StackPanel>
+								</StackPanel>
+							</ScrollViewer>
+						</TabItem>
 						<!-- Issues Tab -->
 						<TabItem Header="🚨 Issues">
 							<ScrollViewer VerticalScrollBarVisibility="Auto">
@@ -274,10 +289,10 @@
 																</TextBlock.Style>
 															</TextBlock>
 															<TextBlock Text="{Binding Message}" FontWeight="Bold"
-                                                                      Margin="5,0,0,0" TextWrapping="Wrap"/>
+                                                                       Margin="5,0,0,0" TextWrapping="Wrap"/>
 														</StackPanel>
 														<TextBlock Text="{Binding Description}" FontSize="11"
-                                                                  Foreground="Gray" TextWrapping="Wrap"/>
+                                                                   Foreground="Gray" TextWrapping="Wrap"/>
 													</StackPanel>
 												</Border>
 											</DataTemplate>
@@ -286,7 +301,7 @@
 
 									<!-- No Issues -->
 									<Border BorderBrush="Green" BorderThickness="2"
-                                           Padding="20" Background="LightGreen" Margin="0,10,0,0">
+                                            Padding="20" Background="LightGreen" Margin="0,10,0,0">
 										<Border.Style>
 											<Style TargetType="Border">
 												<Setter Property="Visibility" Value="Collapsed"/>
@@ -299,9 +314,9 @@
 										</Border.Style>
 										<StackPanel HorizontalAlignment="Center">
 											<TextBlock Text="✅" FontSize="32" Foreground="Green"
-                                                      HorizontalAlignment="Center" Margin="0,0,0,10"/>
+                                                       HorizontalAlignment="Center" Margin="0,0,0,10"/>
 											<TextBlock Text="Code validation passed!" FontSize="14" FontWeight="Bold"
-                                                      HorizontalAlignment="Center"/>
+                                                       HorizontalAlignment="Center"/>
 										</StackPanel>
 									</Border>
 								</StackPanel>
@@ -313,7 +328,7 @@
 							<ScrollViewer VerticalScrollBarVisibility="Auto">
 								<StackPanel Margin="10">
 									<TextBlock Text="Code Analysis Report" FontWeight="Bold"
-                                              FontSize="16" Margin="0,0,0,15"/>
+                                               FontSize="16" Margin="0,0,0,15"/>
 
 									<!-- Analysis Metrics -->
 									<Grid Margin="0,0,0,15">
@@ -356,6 +371,8 @@
 								</StackPanel>
 							</ScrollViewer>
 						</TabItem>
+
+						
 					</TabControl>
 				</GroupBox>
 			</Grid>

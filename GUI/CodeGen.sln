@@ -1,11 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36518.9 d17.14
+VisualStudioVersion = 17.14.36518.9
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeGen", "CodeGen.csproj", "{A7127CDE-DD85-2F72-C12A-5F27D96F35B8}"
-EndProject
-Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Codegen_install", "..\Codegen_install\Codegen_install.vdproj", "{0E94EBDD-CD58-503A-9AC5-4A5A5630DFA5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,8 +15,6 @@ Global
 		{A7127CDE-DD85-2F72-C12A-5F27D96F35B8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A7127CDE-DD85-2F72-C12A-5F27D96F35B8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A7127CDE-DD85-2F72-C12A-5F27D96F35B8}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0E94EBDD-CD58-503A-9AC5-4A5A5630DFA5}.Debug|Any CPU.ActiveCfg = Debug
-		{0E94EBDD-CD58-503A-9AC5-4A5A5630DFA5}.Release|Any CPU.ActiveCfg = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

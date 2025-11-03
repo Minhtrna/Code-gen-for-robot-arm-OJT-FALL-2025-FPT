@@ -6,21 +6,17 @@ using System.Windows.Input;
 using System.Windows.Media.Imaging;
 using GUI.Helpers;
 using GUI.Models;
-using GUI.Services;
 using System.Threading.Tasks;
 using System.Windows;
 using System.IO;
 using System.Linq;
 using System.Windows.Threading;
 using System.Windows.Media;
-using System.Runtime.InteropServices;
 
 namespace GUI.ViewModels
 {
     public class ProjectViewModel : INotifyPropertyChanged, IDisposable
     {
-        private readonly DeviceService deviceService;
-        
         private string _projectStatus = "Project: Robot Arm Analysis - Status: Ready";
         private string _chatInput = "";
         private string _generatedCode = "// Generated code will appear here\n// Select an analysis result and click 'Generate Code'.";
@@ -28,17 +24,10 @@ namespace GUI.ViewModels
         private string _logMessages = "System initialized...\nReady for analysis.\n";
         private bool _isProcessing = false;
         
-        // Live view properties
+        // Live view properties - removed device dependencies
         private bool _hasLiveView = false;
         private BitmapSource _liveViewSource;
         private string _tempImagePath; // Temporary image path for current capture
-        
-        private string connectedDevice = "No Device Connected";
-        public string ConnectedDevice
-        {
-            get => connectedDevice;
-            set { connectedDevice = value; OnPropertyChanged(); }
-        }
 
         public string ProjectStatus
         {
@@ -93,38 +82,21 @@ namespace GUI.ViewModels
         public ObservableCollection<string> AvailableLanguages { get; set; }
 
         public ICommand SendMessageCommand { get; private set; }
-        public ICommand CaptureImageCommand { get; private set; }
+        public ICommand LoadImageCommand { get; private set; }
         public ICommand SaveImageCommand { get; private set; }
         public ICommand AnalyzeImageCommand { get; private set; }
         public ICommand GenerateCodeCommand { get; private set; }
         public ICommand ExportResultsCommand { get; private set; }
         public ICommand ClearResultsCommand { get; private set; }
         public ICommand CopyCodeCommand { get; private set; }
-        public ICommand RefreshDevicesCommand { get; private set; }
 
-        // Constructor mặc định (cho XAML.cs)
-        public ProjectViewModel() : this(new DeviceService()) { }
-
-        // Constructor chính
-        public ProjectViewModel(DeviceService deviceService)
+        // Constructor
+        public ProjectViewModel()
         {
-            this.deviceService = deviceService;
-
             InitializeDemoData();
             InitializeCommands();
-            
-            // Subscribe to STATIC event with logging
-            System.Diagnostics.Debug.WriteLine("[ProjectViewModel] ===== SUBSCRIBING TO DevicesChanged EVENT =====");
-            DeviceService.DevicesChanged += DeviceService_DevicesChanged;
-            
-            // Verify subscription using helper method
-            int subscriberCount = DeviceService.GetSubscriberCount();
-            System.Diagnostics.Debug.WriteLine($"[ProjectViewModel] Total subscribers after registration: {subscriberCount}");
 
-            // Refresh lần đầu
-            _ = RefreshDevices();
-
-            LogMessages += $"[{DateTime.Now:HH:mm:ss}] Project ready. Monitoring device changes...\n";
+            LogMessages += $"[{DateTime.Now:HH:mm:ss}] Project ready. Device functionality removed - use Camera tab for hardware operations.\n";
         }
 
         private void InitializeDemoData()
@@ -132,7 +104,7 @@ namespace GUI.ViewModels
             ChatMessages = new ObservableCollection<ChatMessage>
             {
                 new ChatMessage { Message = "Hello! I'm your AI assistant.", IsFromUser = false, Timestamp = DateTime.Now.AddMinutes(-5) },
-                new ChatMessage { Message = "The system uses DeviceService for camera operations.", IsFromUser = false, Timestamp = DateTime.Now.AddMinutes(-4) }
+                new ChatMessage { Message = "Device management has been moved to Camera tab for direct hardware control.", IsFromUser = false, Timestamp = DateTime.Now.AddMinutes(-4) }
             };
 
             AnalysisResults = new ObservableCollection<AnalysisResult>();
@@ -146,160 +118,48 @@ namespace GUI.ViewModels
         private void InitializeCommands()
         {
             SendMessageCommand = new RelayCommand(async _ => await SendMessage());
-            CaptureImageCommand = new RelayCommand(async _ => await CaptureImage());
+            LoadImageCommand = new RelayCommand(_ => LoadImage());
             SaveImageCommand = new RelayCommand(_ => SaveImage());
             AnalyzeImageCommand = new RelayCommand(async _ => await AnalyzeImage());
             GenerateCodeCommand = new RelayCommand(async _ => await GenerateCode());
             ExportResultsCommand = new RelayCommand(_ => ExportResults());
             ClearResultsCommand = new RelayCommand(_ => ClearResults());
             CopyCodeCommand = new RelayCommand(_ => CopyCode());
-            RefreshDevicesCommand = new RelayCommand(async _ => await RefreshDevices());
         }
 
-        private async void DeviceService_DevicesChanged(object sender, EventArgs e)
-        {
-            System.Diagnostics.Debug.WriteLine("[ProjectViewModel] DevicesChanged event received!");
-            await RefreshDevices();
-        }
-
-        private async Task RefreshDevices()
+        private void LoadImage()
         {
             try
             {
-                System.Diagnostics.Debug.WriteLine("[ProjectViewModel] Starting RefreshDevices...");
-                
-                // Discover devices using THIS instance's service
-                var allDevices = await Task.Run(() => deviceService.DiscoverAllDevices());
-
-                System.Diagnostics.Debug.WriteLine($"[ProjectViewModel] Discovered {allDevices?.Count ?? 0} devices");
-
-                await Application.Current.Dispatcher.InvokeAsync(() =>
+                var dialog = new Microsoft.Win32.OpenFileDialog
                 {
-                    // Find the first connected device
-                    var connected = allDevices?.FirstOrDefault(d => d.IsConnected);
+                    Title = "Load Image for Analysis",
+                    Filter = "Image Files|*.jpg;*.jpeg;*.png;*.bmp;*.tiff|All Files|*.*",
+                    InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures)
+                };
 
-                    if (connected != null)
-                    {
-                        string deviceName = !string.IsNullOrEmpty(connected.Name)
-                            ? connected.Name
-                            : connected.SerialNumber;
-                        
-                        System.Diagnostics.Debug.WriteLine($"[ProjectViewModel] Found connected device: {deviceName}");
-                        
-                        // Only update if changed
-                        if (ConnectedDevice != deviceName)
-                        {
-                            ConnectedDevice = deviceName;
-                            LogMessages += $"[{DateTime.Now:HH:mm:ss}] Device connected: {ConnectedDevice}\n";
-                        }
-                        
-                        // Update HasLiveView based on device connection
-                        if (!HasLiveView)
-                        {
-                            HasLiveView = true;
-                            System.Diagnostics.Debug.WriteLine("[ProjectViewModel] HasLiveView set to TRUE");
-                        }
-                    }
-                    else
-                    {
-                        System.Diagnostics.Debug.WriteLine("[ProjectViewModel] No connected device found");
-                        
-                        // Only update if changed
-                        if (ConnectedDevice != "No Device Connected")
-                        {
-                            ConnectedDevice = "No Device Connected";
-                            LogMessages += $"[{DateTime.Now:HH:mm:ss}] No device connected\n";
-                        }
-                        
-                        // Clear live view when no device
-                        if (HasLiveView)
-                        {
-                            HasLiveView = false;
-                            LiveViewSource = null;
-                            System.Diagnostics.Debug.WriteLine("[ProjectViewModel] HasLiveView set to FALSE");
-                        }
-                    }
-                });
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"[ProjectViewModel] RefreshDevices error: {ex.Message}");
-                LogMessages += $"[{DateTime.Now:HH:mm:ss}] Failed to refresh devices: {ex.Message}\n";
-            }
-        }
-
-        private async Task CaptureImage()
-        {
-            try
-            {
-                IsProcessing = true;
-                LogMessages += $"[{DateTime.Now:HH:mm:ss}] Capturing image from {ConnectedDevice}...\n";
-
-                // Get connected device
-                var allDevices = await Task.Run(() => deviceService.DiscoverAllDevices());
-                var connectedDevice = allDevices?.FirstOrDefault(d => d.IsConnected);
-
-                if (connectedDevice == null)
-                {
-                    LogMessages += $"[{DateTime.Now:HH:mm:ss}] No device connected\n";
-                    MessageBox.Show("Please connect a device first!", "No Device", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    IsProcessing = false;
-                    return;
-                }
-
-                // Create temporary directory for captures if it doesn't exist
-                string tempDir = Path.Combine(Path.GetTempPath(), "RobotArmCaptures");
-                if (!Directory.Exists(tempDir))
-                {
-                    Directory.CreateDirectory(tempDir);
-                }
-
-                // Generate temporary file path
-                _tempImagePath = Path.Combine(tempDir, $"temp_capture_{DateTime.Now:yyyyMMdd_HHmmss}.png");
-
-                // Capture image to temporary file
-                bool success = await Task.Run(() => deviceService.CaptureImage(connectedDevice, _tempImagePath));
-
-                if (success && File.Exists(_tempImagePath))
+                if (dialog.ShowDialog() == true)
                 {
                     // Load image and display in LiveView
-                    await Application.Current.Dispatcher.InvokeAsync(() =>
-                    {
-                        try
-                        {
-                            // Load image from file
-                            BitmapImage bitmap = new BitmapImage();
-                            bitmap.BeginInit();
-                            bitmap.CacheOption = BitmapCacheOption.OnLoad;
-                            bitmap.UriSource = new Uri(_tempImagePath);
-                            bitmap.EndInit();
-                            bitmap.Freeze(); // Important for cross-thread usage
+                    BitmapImage bitmap = new BitmapImage();
+                    bitmap.BeginInit();
+                    bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                    bitmap.UriSource = new Uri(dialog.FileName);
+                    bitmap.EndInit();
+                    bitmap.Freeze();
 
-                            LiveViewSource = bitmap;
+                    LiveViewSource = bitmap;
+                    HasLiveView = true;
+                    _tempImagePath = dialog.FileName;
 
-                            LogMessages += $"[{DateTime.Now:HH:mm:ss}] Image captured successfully\n";
-                            LogMessages += $"[{DateTime.Now:HH:mm:ss}] Image size: {new FileInfo(_tempImagePath).Length / 1024} KB\n";
-                        }
-                        catch (Exception ex)
-                        {
-                            LogMessages += $"[{DateTime.Now:HH:mm:ss}] Failed to load image: {ex.Message}\n";
-                        }
-                    });
-                }
-                else
-                {
-                    LogMessages += $"[{DateTime.Now:HH:mm:ss}] Failed to capture image\n";
-                    MessageBox.Show("Failed to capture image from device.", "Capture Failed", MessageBoxButton.OK, MessageBoxImage.Error);
+                    LogMessages += $"[{DateTime.Now:HH:mm:ss}] Image loaded: {Path.GetFileName(dialog.FileName)}\n";
+                    LogMessages += $"[{DateTime.Now:HH:mm:ss}] Image size: {new FileInfo(dialog.FileName).Length / 1024} KB\n";
                 }
             }
             catch (Exception ex)
             {
-                LogMessages += $"[{DateTime.Now:HH:mm:ss}] Capture error: {ex.Message}\n";
-                MessageBox.Show($"Error capturing image: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-            finally
-            {
-                IsProcessing = false;
+                LogMessages += $"[{DateTime.Now:HH:mm:ss}] Failed to load image: {ex.Message}\n";
+                MessageBox.Show($"Error loading image: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -309,23 +169,23 @@ namespace GUI.ViewModels
             {
                 if (string.IsNullOrEmpty(_tempImagePath) || !File.Exists(_tempImagePath))
                 {
-                    MessageBox.Show("No image to save. Please capture an image first.", "No Image", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show("No image to save. Please load an image first.", "No Image", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
                 // Show save file dialog
                 var dialog = new Microsoft.Win32.SaveFileDialog
                 {
-                    Title = "Save Captured Image",
+                    Title = "Save Current Image",
                     Filter = "PNG Image|*.png|JPEG Image|*.jpg|All Files|*.*",
                     DefaultExt = ".png",
-                    FileName = $"capture_{DateTime.Now:yyyyMMdd_HHmmss}.png",
+                    FileName = $"analysis_{DateTime.Now:yyyyMMdd_HHmmss}.png",
                     InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures)
                 };
 
                 if (dialog.ShowDialog() == true)
                 {
-                    // Copy temp file to selected location
+                    // Copy current image to selected location
                     File.Copy(_tempImagePath, dialog.FileName, true);
                     
                     LogMessages += $"[{DateTime.Now:HH:mm:ss}] Image saved to: {dialog.FileName}\n";
@@ -372,11 +232,11 @@ namespace GUI.ViewModels
         {
             var responses = new[]
             {
-                "I can help you with device management and image capture.",
-                "The unified architecture provides better performance and simpler maintenance.",
-                "DeviceService handles camera management efficiently.",
-                "Perfect unified design! All functionality in one service - much cleaner.",
-                "I can help analyze captured images from your connected devices."
+                "I can help you with image analysis and code generation.",
+                "The simplified architecture focuses on core functionality without device management overhead.",
+                "Load images using the 'Load Image' button for analysis.",
+                "Camera hardware operations are available in the Camera tab.",
+                "I can help analyze loaded images and generate robot control code."
             };
             return responses[new Random().Next(responses.Length)];
         }
@@ -385,17 +245,17 @@ namespace GUI.ViewModels
         {
             if (string.IsNullOrEmpty(_tempImagePath) || !File.Exists(_tempImagePath))
             {
-                MessageBox.Show("Please capture an image first!", "No Image", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Please load an image first!", "No Image", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
             IsProcessing = true;
-            LogMessages += $"[{DateTime.Now:HH:mm:ss}] Analyzing captured image...\n";
+            LogMessages += $"[{DateTime.Now:HH:mm:ss}] Analyzing loaded image...\n";
 
             await Task.Delay(3000);
 
             var objects = new[] { "Robot arm component", "Industrial part", "Assembly piece", "Manufacturing item", "Workshop object" };
-            var types = new[] { "Captured Image", "Static Frame", "Device Output", "Snapshot" };
+            var types = new[] { "Loaded Image", "Static Analysis", "File Input", "Manual Load" };
 
             var newResult = new AnalysisResult
             {
@@ -433,64 +293,54 @@ namespace GUI.ViewModels
             switch (SelectedLanguage)
             {
                 case "C#":
-                    GeneratedCode = @"// C# Robot Control Code - DeviceService Architecture
+                    GeneratedCode = @"// C# Robot Control Code - Simplified Architecture
 using System;
 using RobotControl;
-using GUI.Services;
 
 public class RobotController
 {
-    private readonly DeviceService deviceService;
-    
     public RobotController()
     {
-        deviceService = new DeviceService();
+        // Direct hardware control through Camera tab
+        // Simplified architecture without device service layer
     }
     
-    public async Task ExecuteWithImageAnalysis()
+    public async Task ExecuteWithImageAnalysis(string imagePath)
     {
         var robot = new RobotArm();
         
-        // Discover and connect to camera
-        var devices = deviceService.DiscoverAllDevices();
-        var camera = devices.FirstOrDefault(d => d.Type.Contains(""Camera""));
+        // Analyze pre-loaded image for objects
+        var objects = AnalyzeImageFile(imagePath);
         
-        if (camera != null && deviceService.ConnectDevice(camera))
+        foreach (var obj in objects)
         {
-            // Capture image for analysis
-            string imagePath = ""capture.jpg"";
-            if (deviceService.CaptureImage(camera, imagePath))
+            if (obj.Confidence > 0.8)
             {
-                // Analyze captured image for objects
-                var objects = AnalyzeImage(imagePath);
+                // Execute robot movement
+                await robot.MoveToAsync(obj.X, obj.Y, obj.Z + 20.0);
+                robot.OpenGripper();
+                await robot.MoveToAsync(obj.X, obj.Y, obj.Z);
+                robot.CloseGripper();
                 
-                foreach (var obj in objects)
-                {
-                    if (obj.Confidence > 0.8)
-                    {
-                        // Execute robot movement
-                        await robot.MoveToAsync(obj.X, obj.Y, obj.Z + 20.0);
-                        robot.OpenGripper();
-                        await robot.MoveToAsync(obj.X, obj.Y, obj.Z);
-                        robot.CloseGripper();
-                        
-                        // Place at destination
-                        await robot.MoveToAsync(200.0, 100.0, 50.0);
-                        robot.OpenGripper();
-                        break;
-                    }
-                }
+                // Place at destination
+                await robot.MoveToAsync(200.0, 100.0, 50.0);
+                robot.OpenGripper();
+                break;
             }
-            
-            deviceService.DisconnectDevice(camera);
         }
         
         await robot.MoveToHomeAsync();
     }
+    
+    private List<DetectedObject> AnalyzeImageFile(string imagePath)
+    {
+        // Image analysis implementation
+        return new List<DetectedObject>();
+    }
 }";
                     break;
                 default:
-                    GeneratedCode = $"// {SelectedLanguage} robot control code with DeviceService\n// Single service handles all device operations\n// Simplified architecture with better performance";
+                    GeneratedCode = $"// {SelectedLanguage} robot control code\n// Simplified architecture for better performance\n// Load images manually for analysis";
                     break;
             }
         }
@@ -504,7 +354,7 @@ public class RobotController
         private void ClearResults()
         {
             AnalysisResults.Clear();
-            GeneratedCode = "// Generated code will appear here\n// Using DeviceService architecture";
+            GeneratedCode = "// Generated code will appear here\n// Load an image and analyze for code generation";
             LogMessages += $"[{DateTime.Now:HH:mm:ss}] Results cleared\n";
         }
 
@@ -526,11 +376,8 @@ public class RobotController
 
         public void Dispose()
         {
-            // Unsubscribe from static event
-            DeviceService.DevicesChanged -= DeviceService_DevicesChanged;
-            
-            // Clean up temporary image file
-            if (!string.IsNullOrEmpty(_tempImagePath) && File.Exists(_tempImagePath))
+            // Clean up temporary image file if needed
+            if (!string.IsNullOrEmpty(_tempImagePath) && File.Exists(_tempImagePath) && _tempImagePath.Contains("temp"))
             {
                 try
                 {
@@ -541,8 +388,6 @@ public class RobotController
                     // Ignore cleanup errors
                 }
             }
-            
-            deviceService?.Dispose();
         }
     }
 }

@@ -31,9 +31,17 @@ namespace GUI.ViewModels
         private double _targetY = 1000;
         private double _targetZ = 1750;
 
+        // Target Orientation
+        private double _targetRoll = 0;
+        private double _targetPitch = 0;
+        private double _targetYaw = 0;
+
         // Current position
         private Vector3D _currentPosition;
         private Model3DGroup _robotModel;
+
+        // Current Orientation
+        private Vector3D _currentOrientation;
 
         // Code validation
         private string _codeToValidate = "";
@@ -145,6 +153,63 @@ namespace GUI.ViewModels
             }
         }
 
+        public double TargetRoll
+        {
+            get => _targetRoll;
+            set
+            {
+                _targetRoll = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(TargetOrientation));
+            }
+        }
+
+        public double TargetPitch
+        {
+            get => _targetPitch;
+            set
+            {
+                _targetPitch = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(TargetOrientation));
+            }
+        }
+
+        public double TargetYaw
+        {
+            get => _targetYaw;
+            set
+            {
+                _targetYaw = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(TargetOrientation));
+            }
+        }
+
+        public Vector3D TargetOrientation => new Vector3D(TargetRoll, TargetPitch, TargetYaw);
+
+        public Vector3D CurrentOrientation
+        {
+            get => _currentOrientation;
+            set
+            {
+                _currentOrientation = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(CurrentRoll));
+                OnPropertyChanged(nameof(CurrentPitch));
+                OnPropertyChanged(nameof(CurrentYaw));
+                OnPropertyChanged(nameof(CurrentOrientationText));
+            }
+        }
+
+        public double CurrentRoll => CurrentOrientation.X;
+        public double CurrentPitch => CurrentOrientation.Y;
+        public double CurrentYaw => CurrentOrientation.Z;
+
+        public string CurrentOrientationText => $"R:{CurrentRoll:F1}° P:{CurrentPitch:F1}° Y:{CurrentYaw:F1}°";
+
+        public string CurrentPositionText => $"X:{CurrentX:F1} Y:{CurrentY:F1} Z:{CurrentZ:F1}";
+
         // Robot State
         public string CurrentPosition => $"X:{CurrentX:F1} Y:{CurrentY:F1} Z:{CurrentZ:F1}";
 
@@ -179,6 +244,7 @@ namespace GUI.ViewModels
                 _targetX = value;
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(TargetPosition));
+                OnPropertyChanged(nameof(TargetPositionPoint));
                 OnPropertyChanged(nameof(DistanceToTarget));
             }
         }
@@ -191,6 +257,7 @@ namespace GUI.ViewModels
                 _targetY = value;
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(TargetPosition));
+                OnPropertyChanged(nameof(TargetPositionPoint));
                 OnPropertyChanged(nameof(DistanceToTarget));
             }
         }
@@ -203,6 +270,7 @@ namespace GUI.ViewModels
                 _targetZ = value;
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(TargetPosition));
+                OnPropertyChanged(nameof(TargetPositionPoint));
                 OnPropertyChanged(nameof(DistanceToTarget));
             }
         }
@@ -216,7 +284,12 @@ namespace GUI.ViewModels
             {
                 if (Joints.Count == 0) return 0;
                 double[] angles = Joints.Select(j => j.Angle).ToArray();
-                return _kinematicsService.DistanceFromTarget(Joints, TargetPosition, angles);
+                return _kinematicsService.DistanceFromTarget(
+                    Joints,
+                    TargetPosition,
+                    TargetOrientation,
+                    angles
+                );
             }
         }
 
@@ -507,7 +580,10 @@ namespace GUI.ViewModels
             if (Joints.Count < 6) return;
 
             double[] angles = Joints.Select(j => j.Angle).ToArray();
-            CurrentPosition3D = _kinematicsService.ForwardKinematics(Joints, angles);
+            var (position, orientation) = _kinematicsService.ForwardKinematics(Joints, angles);
+
+            CurrentPosition3D = position;
+            CurrentOrientation = orientation;
         }
 
         private void AnimationTimer_Tick(object sender, EventArgs e)
@@ -522,25 +598,37 @@ namespace GUI.ViewModels
                 return;
             }
 
-            // Perform one IK iteration
+            // Perform IK iteration với orientation
             double[] currentAngles = Joints.Select(j => j.Angle).ToArray();
 
             double[] newAngles = _kinematicsService.InverseKinematics(
                 Joints,
                 TargetPosition,
+                TargetOrientation,
                 currentAngles,
-                1
+                10 // Nhiều iterations hơn mỗi frame
             );
 
+            // Smooth transition - lerp angles
+            double alpha = 0.2 * SimulationSpeed; // Smooth factor
             for (int i = 0; i < 6; i++)
             {
-                Joints[i].Angle = newAngles[i];
+                double currentAngle = Joints[i].Angle;
+                double targetAngle = newAngles[i];
+                Joints[i].Angle = currentAngle + (targetAngle - currentAngle) * alpha;
             }
 
             UpdateForwardKinematics();
 
             // Check if reached target
-            if (DistanceToTarget < 20)
+            double distance = _kinematicsService.DistanceFromTarget(
+                Joints,
+                TargetPosition,
+                TargetOrientation,
+                Joints.Select(j => j.Angle).ToArray()
+            );
+
+            if (distance < 1)
             {
                 ExecuteStopSimulation();
                 SimulationStatus = "Target Reached";

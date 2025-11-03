@@ -2,40 +2,74 @@
 // Copyright(c) 2017 Intel Corporation. All Rights Reserved.
 
 #include <librealsense2/rs.hpp> // Include RealSense Cross Platform API
-#include "example.hpp"          // Include short list of convenience functions for rendering
+#include <iostream>
+#include <iomanip>
 
-// Capture Example demonstrates how to
-// capture depth and color video streams and render them to the screen
+// Simple console-based RealSense capture example
 int main(int argc, char * argv[]) try
 {
-    rs2::log_to_console(RS2_LOG_SEVERITY_ERROR);
-    // Create a simple OpenGL window for rendering:
-    window app(1280, 720, "RealSense Capture Example");
+    std::cout << "RealSense Capture Console Application" << std::endl;
+    std::cout << "Device Interface removed - simplified architecture" << std::endl;
+    std::cout << "======================================" << std::endl;
 
-    // Declare depth colorizer for pretty visualization of depth data
-    rs2::colorizer color_map;
-    // Declare rates printer for showing streaming rates of the enabled streams.
-    rs2::rates_printer printer;
+    // Enable logging
+    rs2::log_to_console(RS2_LOG_SEVERITY_ERROR);
 
     // Declare RealSense pipeline, encapsulating the actual device and sensors
     rs2::pipeline pipe;
 
-    // Start streaming with default recommended configuration
-    // The default video configuration contains Depth and Color streams
-    // If a device is capable to stream IMU data, both Gyro and Accelerometer are enabled by default
-    pipe.start();
+    // Configure pipeline to stream color and depth frames
+    rs2::config cfg;
+    cfg.enable_stream(RS2_STREAM_COLOR, 640, 480, RS2_FORMAT_BGR8, 30);
+    cfg.enable_stream(RS2_STREAM_DEPTH, 640, 480, RS2_FORMAT_Z16, 30);
 
-    while (app) // Application still alive?
+    // Start streaming with configured parameters
+    rs2::pipeline_profile profile = pipe.start(cfg);
+
+    std::cout << "RealSense pipeline started successfully" << std::endl;
+    std::cout << "Streaming 640x480 @ 30fps (Color + Depth)" << std::endl;
+    std::cout << "Press Ctrl+C to stop..." << std::endl;
+
+    int frame_count = 0;
+    auto start_time = std::chrono::high_resolution_clock::now();
+
+    while (true) // Capture frames continuously
     {
-        rs2::frameset data = pipe.wait_for_frames().    // Wait for next set of frames from the camera
-                             apply_filter(printer).     // Print each enabled stream frame rate
-                             apply_filter(color_map);   // Find and colorize the depth data
+        try {
+            // Wait for next set of frames from the camera
+            rs2::frameset frames = pipe.wait_for_frames(5000); // 5 second timeout
 
-        // The show method, when applied on frameset, break it to frames and upload each frame into a gl textures
-        // Each texture is displayed on different viewport according to it's stream unique id
-        app.show(data);
+            // Get color and depth frames
+            rs2::frame color_frame = frames.get_color_frame();
+            rs2::frame depth_frame = frames.get_depth_frame();
+
+            frame_count++;
+
+            // Print frame info every 30 frames (roughly once per second)
+            if (frame_count % 30 == 0)
+            {
+                auto current_time = std::chrono::high_resolution_clock::now();
+                auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+                    current_time - start_time).count();
+
+                double fps = (frame_count * 1000.0) / duration;
+
+                std::cout << "Frame " << std::setw(6) << frame_count 
+                         << " | FPS: " << std::fixed << std::setprecision(1) << fps
+                         << " | Color: " << color_frame.get_width() << "x" << color_frame.get_height()
+                         << " | Depth: " << depth_frame.get_width() << "x" << depth_frame.get_height()
+                         << std::endl;
+            }
+        }
+        catch (const rs2::error& e) {
+            std::cerr << "RealSense error: " << e.what() << std::endl;
+            break;
+        }
     }
 
+    std::cout << "Stopping pipeline..." << std::endl;
+    pipe.stop();
+    
     return EXIT_SUCCESS;
 }
 catch (const rs2::error & e)
@@ -45,6 +79,11 @@ catch (const rs2::error & e)
 }
 catch (const std::exception& e)
 {
-    std::cerr << e.what() << std::endl;
+    std::cerr << "Standard error: " << e.what() << std::endl;
+    return EXIT_FAILURE;
+}
+catch (...)
+{
+    std::cerr << "Unknown error occurred" << std::endl;
     return EXIT_FAILURE;
 }
