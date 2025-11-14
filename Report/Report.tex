@@ -15,6 +15,7 @@
 \usepackage{tikz}
 \usepackage{orcidlink}
 \usepackage{flushend}
+\usepackage[table]{xcolor}
 \hypersetup{pdfborder={0 0 0}}
 
 \usetikzlibrary{positioning, shapes.geometric, arrows.meta, calc}
@@ -59,13 +60,15 @@ Other relevant works include the development of Large-language models (VLMs) lik
 
 \section{Methodology}
 \subsection{Overview}
-\includegraphics[width=7cm]{OJT_fig_1.png}
+
+\includegraphics[width=0.95\columnwidth]{figures/OJT_FIG_1.pdf}
 
 We leverage the capabilities of vision language models (VLMs) to generate code for robot arm applications. Combined with visual information from dedicated sensors like Mech-EYE we could enhance the understanding of the environment and improve the accuracy of the generated code.
 The overall pipeline consists of several key components: Intel Realsense 3D camera, VLMs, and a simulator for validating the generated code without the need of physical hardware. The Intel Realsense camera captures high-resolution images and 3D point clouds of the robot's surroundings, providing essential visual context for the VLMs. The VLMs, such as MobileVLM\cite{chu2023mobilevlm}, RoboCodeX\cite{mu2024robocodex}  or specialized models for robotic manipulation like GeminiRobotics\cite{team2025gemini}, are then employed to generate code based on the visual data and specific task requirements. More comprehensive tasks such as video instructions for robotic manipulation are also considered \cite{xie2025robotic}.
 Finally, the generated code is executed in a controlled environment built with \href{https://docs.ros.org/}{ROS2} and \href{http://gazebosim.org/}{GAZEBO} to validate its functionality and performance.
 \subsection{Systems Design}
-\includegraphics[width=8cm]{Design.png}
+
+\includegraphics[width=0.95\columnwidth]{figures/system.pdf}
 
 We designed a modular system architecture to facilitate the integration of various components involved in the code generation process.
 The architecture consists of the following modules:
@@ -79,13 +82,35 @@ The architecture consists of the following modules:
 
 \subsection{Robotics-Oriented Vision Language Models}
 
+\subsubsection{Vision Language Models}
+
 The robotics team is responsible for the integration and fine-tuning of the large language models (VLMs) used for code generation. They ensure that the selected VLMs are properly configured to handle the specific requirements of robot arm applications. The team also works on optimizing the performance of the VLMs by fine-tuning them on relevant datasets and adjusting hyperparameters to improve code generation accuracy.
 Initially, we planned to use MobileVLMV2 \cite{chu2024mobilevlm} as the base model for our code generation tasks due to its efficiency and effectiveness in handling multimodal inputs. The model was fine-tuned on a custom dataset of robotic tasks to enhance its performance in generating context-aware code. It was also integrated into the system to provide real-time code generation capabilities, allowing for dynamic adaptation to changing task requirements and environmental conditions.
 However, due to the severe shortage of operational robot data necessary for fine-tuning, adapting the model effectively became infeasible. The scarcity of domain-specific datasets for robot control and manipulation tasks limited the model's ability to generalize and perform robust code generation for complex robotic operations.
 Consequently, after encountering these limitations we transitioned to utilizing Gemini Robotics. Gemini Robotics is an advanced Vision-Language-Action model designed specifically for robotics applications, with strong embodied reasoning and 3D spatial understanding. This model provides more accurate, reactive, and dexterous control code generation suited for real-world robotic systems, and can adapt flexibly to a wide range of manipulation tasks and robotic platforms.\cite{abdolmaleki2025gemini,team2025gemini}
-
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.95\columnwidth]{figures/gr_1.5_overview_v6.pdf}
+  \caption{Overview of Gemini Robotics 1.5 abilities\cite{team2025gemini}. The model integrates visual inputs with language understanding to generate action plans for robotic manipulation tasks.}
+  \label{fig:gemini-robotics-overview}
+\end{figure}
 Recent developments in Gemini Robotics 2.0\cite{team2025gemini} have further pushed the boundaries of generalist robots by incorporating advanced embodied reasoning, thinking, and motion transfer capabilities. This iteration enhances the model's ability to understand complex environments and execute sophisticated tasks, making it a promising choice for our code generation needs in robot arm applications. But the current available version Gemini Robotics 1.5 have the abilities to process visual inputs it self but it is limited to 2D image inputs only, which may not provide sufficient spatial context for accurate code generation in complex robotic tasks. By integrating a dedicated vision model that can capture and interpret 3D spatial information from the environment, we can enhance the overall performance of the Gemini Robotics model. This integration will allow the system to better understand the spatial relationships and dynamics of objects within the robot's workspace, leading to more precise and effective code generation for robotic manipulation tasks.
 Though the model come with self contained vision capabilities, a dedicated local 3D vision model is necessary when it meight reduce latency and cost associated with cloud-based processing. Additionally, a specialized vision model can be fine-tuned to the specific environmental conditions and object types encountered in our robot arm applications, thereby improving the accuracy and reliability of visual perception. This tailored approach allows for better integration with the Gemini Robotics model, ultimately enhancing the overall system's performance in generating context-aware and effective code for robotic tasks.
+
+\subsubsection{Robotics Code Synthesis}
+
+Based on the visual inputs and task specifications provided by the user, We utilize the Gemini Robotics model to generate code that control the robot arm's movements and actions. 
+The generated code is then subjected to a verification process to ensure its correctness and reliability.
+The verification process involves the output code of the Main generation module is passed to a validation module that take the generated code and the original task specifications as inputs.
+This module will analyze the code to check for logical consistency, adherence to task requirements, and potential errors. If any discrepancies or issues are identified, the module will provide feedback to the generation module for refinement and improvement.
+This iterative process in \ref{fig:code-synthesis-process} continues until the generated code meets the desired standards of accuracy and reliability, ensuring that the final output is suitable for deployment in real-world robotic applications.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=.95\columnwidth]{figures/Codesyn.pdf}
+  \caption{Code synthesis process using VLMs with self-verification mechanism. The system generates code based on visual inputs and task specifications, followed by a verification step to ensure correctness and reliability.}
+  \label{fig:code-synthesis-process}
+\end{figure}
 
 
 \subsection{Vision Models}
@@ -139,11 +164,60 @@ This seamless workflow enables thorough validation of the generated IK code
   \label{fig:simulation-environment}
 \end{figure}
 
+\subsubsection{Validation Setup}
+To evaluate the performance of the code generation system, we used GAZEBO simulator integrated with ROS2.
+The simulator provides a realistic environment for testing the generated code without the need for physical hardware. 
+The main outcomes is make sure the generated code can successfully control the robot arm to perform the specified tasks.
+
+\subsubsection{Validate Environment Setup}
+
+The validation environment consists of a virtual robot arm model, a set of objects to interact with, and predefined tasks that the robot arm needs to accomplish.
+The robot arm model is designed to mimic the kinematics and dynamics of a real-world industrial robot, allowing for accurate testing of the generated code.
+We setup several virtual cameras in the simulation environment to capture visual data from different perspectives.
+These cameras provide the necessary visual context for the Self verify module of code synthesis system allowing it to analyze the execution of generated code.
 
 
-
+%\newpage
 
 \section{Results and Discussion}
+
+\subsection{Experiment Setup}
+To assess the effectiveness of our code generation system, we designed a series of experiments comparing the performance of models with and without 3D vision context.
+We selected a set of representative robotic tasks that require precise manipulation and control of the robot arm. 
+The experiments were conducted in a controlled environment using the GAZEBO simulator integrated with ROS2.
+The main outcomes is measured based on two metrics: time taken to complete the task and the number of attempts required to achieve successful execution.
+
+\subsection{Analysis on Performance of 3D Vision Context}
+
+\begin{table}[h!]
+\centering
+\caption{Comparison of models with and without 3D vision context}
+\renewcommand{\arraystretch}{1.3} 
+\begin{tabular}{ccc}
+\toprule
+\textbf{3D Vision Context} & \textbf{Time(s)} & \textbf{Attempts} \\
+\midrule
+Yes & -- & -- \\
+No & -- & -- \\
+\midrule
+\end{tabular}
+\end{table}
+
+\subsection{Comparison of GenCode System and Manual Coding}
+
+\begin{table}[h!]
+\centering
+\caption{Performance comparison between code generation system and manual coding}
+\renewcommand{\arraystretch}{1.3} 
+\begin{tabular}{ccc}
+\toprule
+\textbf{Method} & \textbf{Time(s)} & \textbf{Attempts} \\
+\midrule
+GenCode System & -- & -- \\
+Manual Coding  & -- & -- \\
+\midrule
+\end{tabular}
+\end{table}
 
 \section{Conclusion}
 
