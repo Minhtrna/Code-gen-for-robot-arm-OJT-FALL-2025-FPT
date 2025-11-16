@@ -1,0 +1,32 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <model name="AUBO_I10">
+    <satatic>false</satatic>
+    <!-- Base -->
+    <link name="base_link">
+      <collision name="base_collision">
+        <geometry>
+          <box>
+            <size>3 2 5</size>
+          </box>
+        </geometry>   
+        <surface>
+          <friction>
+            <ode>
+              <mu>100</mu>
+              <mu2>50</mu2>
+            </ode>
+          </friction>
+        </surface>  
+      </collision>
+      <visual name ="visual">
+        <gemometry>
+          <mesh>
+            <uri>model://AUBO_I10//meshes//I10i10_base.stl</uri>
+            <scale>0.01 0.01 0.01</scale>
+          </mesh>
+        </gemometry>
+      </visual>
+    </link> 
+  </model>
+</sdf>
