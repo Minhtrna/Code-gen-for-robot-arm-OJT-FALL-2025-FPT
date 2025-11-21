@@ -1,0 +1,18 @@
+"I10MeshI10_Base.stl" 
+"I10MeshI10_Joint_1.stl" 
+"I10MeshI10_Joint_2.stl" 
+"I10MeshI10_Joint_3.stl" 
+"I10MeshI10_Joint_4.stl" 
+"I10MeshI10_Joint_5.stl" 
+"I10MeshI10_Joint_6.stl" 
+"filelist.txt" 
+"I10_Base.stl" 
+"I10_Joint_1.stl" 
+"I10_Joint_2.stl" 
+"I10_Joint_3.stl" 
+"I10_Joint_4.stl" 
+"I10_Joint_5.stl" 
+"I10_Joint_6.stl" 
+
+
+for %f in (*) do @echo "%f" >> filelist.txt

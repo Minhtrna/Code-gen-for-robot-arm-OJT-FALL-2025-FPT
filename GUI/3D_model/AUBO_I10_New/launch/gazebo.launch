@@ -1,0 +1,25 @@
+from launch import LaunchDescription
+from launch_ros.actions import Node
+
+def generate_launch_description():
+    return LaunchDescription([
+        Node(
+            package='robot_state_publisher',
+            executable='robot_state_publisher',
+            name='robot_state_publisher',
+            parameters=[{
+                'use_sim_time': False,
+                'robot_description': open('\Code-gen-for-robot-arm-OJT-FALL-2025-FPT\GUI\3D_model\AUBO_I10\urdf\aubo_i10.urdf').read(),
+            }],
+        ),
+        Node(
+            package='joint_state_publisher_gui',
+            executable='joint_state_publisher_gui',
+            name='joint_state_publisher_gui'
+        ),
+        Node(
+            package='rviz2',
+            executable='rviz2',
+            name='rviz2'
+        ),
+    ])

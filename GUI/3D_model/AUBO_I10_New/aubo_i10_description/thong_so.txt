@@ -1,0 +1,51 @@
+###Cách xác định cho robot 6 DOF (AUBO-i10)
+| **Joint** | **Axis quay** | **Vị trí origin (xyz)**      | **Ghi chú**              |
+| --------- | ------------- | ---------------------------- | ------------------------ |
+| Joint1    | Z             | Trục base, cao bằng đế robot | Quay tròn chân robot     |
+| Joint2    | Y             | Đầu trên của link1           | Lên/xuống cánh tay       |
+| Joint3    | Y             | Đầu trên link2               | Gập/duỗi cánh tay giữa   |
+| Joint4    | X             | Đầu trên link3               | Quay cánh tay trước tool |
+| Joint5    | Y             | Đầu trên link4               | Quay tool pitch          |
+| Joint6    | X             | Đầu trên link5               | Quay tool yaw            |
+Các axis X/Y/Z tuân theo chuẩn DH hoặc trục cơ khí thực tế.
+
+Các giá trị xyz của origin thường là chiều dài từng link dọc theo trục parent link.
+
+Nếu không có CAD chính xác, bạn có thể ước lượng dựa trên sải tay tối đa: ví dụ tổng reach = 1350 mm, chia các đoạn link cho các joint.
+
+###Phương pháp xác định từ CAD / 3D model
+
+Mở CAD hoặc mesh của robot.
+
+Xác định vị trí trục quay khớp (trục tròn thực tế).
+
+Lấy tọa độ trục joint so với parent link → dùng làm origin xyz.
+
+Lấy trục quay của joint trong hệ trục parent link → dùng làm axis.
+
+Thường:
+
+Joints 1,4,6 quay quanh Z hoặc X
+
+Joints 2,3,5 quay quanh Y
+
+###ước lượng trong file urdf
+| Joint  | Axis  | Origin xyz (approx) |
+| ------ | ----- | ------------------- |
+| joint1 | 0 0 1 | 0 0 0.05            |
+| joint2 | 0 1 0 | 0 0 0.4             |
+| joint3 | 0 1 0 | 0 0 0.3             |
+| joint4 | 1 0 0 | 0 0 0.25            |
+| joint5 | 0 1 0 | 0 0 0.2             |
+| joint6 | 1 0 0 | 0 0 0.15            |
+| tool0  | —     | 0 0 0.1             |
+
+###Join limit
+| Joint  | Lower (rad)        | Upper (rad)       | Velocity (rad/s)     | Ghi chú       |
+| ------ | ------------------ | ----------------- | -------------------- | ------------- |
+| Joint1 | -175° → -3.054 rad | +175° → 3.054 rad | 150°/s → 2.618 rad/s | Base rotation |
+| Joint2 | -175° → -3.054 rad | +175° → 3.054 rad | 180°/s → 3.142 rad/s | Shoulder      |
+| Joint3 | -175° → -3.054 rad | +175° → 3.054 rad | 150°/s → 2.618 rad/s | Elbow         |
+| Joint4 | -175° → -3.054 rad | +175° → 3.054 rad | 180°/s → 3.142 rad/s | Wrist 1       |
+| Joint5 | -175° → -3.054 rad | +175° → 3.054 rad | 180°/s → 3.142 rad/s | Wrist 2       |
+| Joint6 | -175° → -3.054 rad | +175° → 3.054 rad | 180°/s → 3.142 rad/s | Wrist 3       |

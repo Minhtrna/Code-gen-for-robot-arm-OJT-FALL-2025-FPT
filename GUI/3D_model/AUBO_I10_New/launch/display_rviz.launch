@@ -1,0 +1,37 @@
+<launch xmlns:xi="http://www.w3.org/2001/XInclude">
+
+  <!-- Argument: bật / tắt joint_state_publisher_gui -->
+  <arg name="gui" default="false"/>
+
+  <!-- Load URDF -->
+  <param
+    name="robot_description"
+    command="cat $(find-pkg-share 3D_model)/mecanum_urdf.urdf"
+  />
+
+  <!-- If GUI = true → dùng joint_state_publisher_gui -->
+  <group if="$(var gui)">
+    <node pkg="joint_state_publisher_gui" exec="joint_state_publisher_gui" name="joint_state_publisher_gui"/>
+  </group>
+
+  <!-- If GUI = false → dùng joint_state_publisher -->
+  <group unless="$(var gui)">
+    <node pkg="joint_state_publisher" exec="joint_state_publisher" name="joint_state_publisher"/>
+  </group>
+
+  <!-- Robot State Publisher -->
+  <node
+    pkg="robot_state_publisher"
+    exec="robot_state_publisher"
+    name="robot_state_publisher"
+  />
+
+  <!-- RViz2 -->
+  <node
+    pkg="rviz2"
+    exec="rviz2"
+    name="rviz2"
+    args="-d $(find-pkg-share 3D_model)/rviz/mecanum.rviz"
+  />
+
+</launch>
